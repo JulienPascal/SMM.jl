@@ -1,6 +1,6 @@
-using SMM
-using Distributions
-using DataStructures
+@everywhere using SMM
+@everywhere using Distributions
+@everywhere using DataStructures
 
 @static if VERSION < v"0.7.0-DEV.2005"
     using Base.Test
@@ -22,7 +22,7 @@ end
     # The difference of magniture make it more difficult to find the minimum
     tol6dMean = 0.5
 
-    function functionTest6d(x)
+    @everywhere function functionTest6d(x)
 
         d = MvNormal(x, eye(6))
 
@@ -37,7 +37,7 @@ end
     end
 
 
-    t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 500))
+    t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 1000, saveName = "parallel6D"))
 
 
     #------------------------------------------------------
@@ -70,7 +70,11 @@ end
     # C. Run the optimization
     # This function first modifies t.bbSetup
     # and then modifies t.bbResults
-    smmoptimize!(t, verbose = true)
+
+    # [TODO] loading and restarting does
+    # not seem to work when using workers in parallel
+    # Figure out why
+    listBestFitness, listBestCandidates = smmoptimize!(t, verbose = true)
 
     @test best_candidate(t.bbResults)[1] ≈ -1.0 atol = tol6dMean
     @test best_candidate(t.bbResults)[2] ≈ 1.0 atol = tol6dMean

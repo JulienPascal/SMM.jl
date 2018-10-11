@@ -121,7 +121,7 @@ function set_bbSetup!(sMMProblem::SMMProblem)
   #-------------------------------------------------
   mySearchRange = generate_bbSearchRange(sMMProblem)
 
-  println("$(nworkers()) detected")
+  println("$(nworkers()) workers detected")
 
   if nworkers() == 1
     sMMProblem.bbSetup = bbsetup(sMMProblem.objective_function;

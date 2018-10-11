@@ -148,9 +148,11 @@ Function to save a SMMProblem to disk.
 function saveSMMOptim(sMMProblem::SMMProblem; verbose::Bool = false, saveName::String = "")
 
     bestValue = best_candidate(sMMProblem.bbResults)
+    bestFitness = best_fitness(sMMProblem.bbResults)
 
     if verbose == true
         println("Best Value: ", bestValue)
+        println("Best Fitness: ", bestFitness)
         println("Saving optimisation to disk")
     end
 
