@@ -36,7 +36,7 @@ function smmoptimize!(sMMProblem::SMMProblem; verbose::Bool = true)
 
       # Save to disk
       #-------------
-      saveSMMOptim(sMMProblem, verbose = verbose, saveName = sMMProblem.options.saveName, verbose = true);
+      saveSMMOptim(sMMProblem, verbose = verbose, saveName = sMMProblem.options.saveName);
       push!(listBestFitness, best_fitness(sMMProblem.bbResults))
       push!(listBestCandidates, best_candidate(sMMProblem.bbResults))
   end
