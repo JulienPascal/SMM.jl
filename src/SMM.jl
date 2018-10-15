@@ -43,6 +43,10 @@ module SMM
   #---------------------------------------------
   include("optimize.jl")
 
+  # Functions to do plots
+  #---------------------------------------------
+  include("plots.jl")
+
   # Exports
   #--------
   # Functions and types in types.jl
@@ -66,6 +70,8 @@ module SMM
   # Functions and types in optimize.jl
   #-----------------------------------
   export smmoptimize!, smm_minimizer
+
+  export smm_slices, drawMe
 
 
 

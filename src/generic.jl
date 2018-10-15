@@ -41,8 +41,8 @@ function construct_objective_function!(sMMProblem::SMMProblem, objectiveType::Sy
 
       catch errorSimulation
 
-        println("An error occured with parameter values = $(x)")
-        println("$(errorSimulation)")
+        info("An error occured with parameter values = $(x)")
+        info("$(errorSimulation)")
 
           OrderedDict{String,Array{Float64,1}}(), 0
 
@@ -121,9 +121,10 @@ function set_bbSetup!(sMMProblem::SMMProblem)
   #-------------------------------------------------
   mySearchRange = generate_bbSearchRange(sMMProblem)
 
-  println("$(nworkers()) worker(s) detected")
+  info("$(nworkers()) worker(s) detected")
 
   if nworkers() == 1
+    info("Starting optimization in serial")
     sMMProblem.bbSetup = bbsetup(sMMProblem.objective_function;
                               Method = sMMProblem.options.bbOptimizer,
                               SearchRange = mySearchRange,
@@ -131,6 +132,7 @@ function set_bbSetup!(sMMProblem::SMMProblem)
                               TraceMode = :verbose,
                               NumDimensions = length(keys(sMMProblem.priors)))
   else
+    info("Starting optimization in parallel")
     sMMProblem.bbSetup = bbsetup(sMMProblem.objective_function;
                                 Method = sMMProblem.options.bbOptimizer,
                                 SearchRange = mySearchRange,

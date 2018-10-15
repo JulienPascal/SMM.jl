@@ -55,7 +55,7 @@ file should have the following columns "name", "value", "upper_bound", "lower_bo
    # store the number of rows in the dataframe:
    #------------------------------------------
    number_rows = size(dataFrame, 1)
-   println(string(number_rows, " prior values found"))
+   info(string(number_rows, " prior(s) values found"))
 
    # Append the dictionary
    #----------------------
@@ -125,7 +125,7 @@ function read_empirical_moments(pathToCsv::String)
   # store the number of rows in the dataframe:
   #------------------------------------------
   number_rows = size(dataFrame,1)
-  println(string(number_rows, " moments found."))
+  info(string(number_rows, " moment(s) found."))
 
 
   # Append the dictionary
@@ -150,9 +150,9 @@ function saveSMMOptim(sMMProblem::SMMProblem; verbose::Bool = false, saveName::S
     bestFitness = best_fitness(sMMProblem.bbResults)
 
     if verbose == true
-        println("Best Value: ", bestValue)
-        println("Best Fitness: ", bestFitness)
-        println("Saving optimisation to disk")
+        info("Best Value: ", bestValue)
+        info("Best Fitness: ", bestFitness)
+        info("Saving optimisation to disk")
     end
 
     # If no name is provided, generate a random name
@@ -167,7 +167,7 @@ function saveSMMOptim(sMMProblem::SMMProblem; verbose::Bool = false, saveName::S
 
 
     if verbose == true
-        println("Done.")
+        info("Done.")
     end
 
 end
@@ -180,7 +180,7 @@ Function to save a SMMProblem to disk.
 function loadSMMOptim(saveName::String; verbose::Bool = false)
 
     if verbose == true
-        println("Loading optimisation from disk")
+        info("Loading optimisation from disk")
     end
 
     #-------------------------------
@@ -194,7 +194,7 @@ function loadSMMOptim(saveName::String; verbose::Bool = false)
     JLD2.@load tempfilename sMMProblem
 
     if verbose == true
-        println("Done.")
+        info("Done.")
     end
 
     return sMMProblem
