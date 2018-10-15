@@ -87,24 +87,24 @@ function construct_objective_function!(sMMProblem::SMMProblem, objectiveType::Sy
 end
 
 """
-  set_priors!(sMMProblem::SMMProblem, priors::DataStructures.OrderedDict{String,Array{Float64,1}})
+  set_priors!(sMMProblem::SMMProblem, priors::OrderedDict{String,Array{Float64,1}})
 
 Function to change the field sMMProblem.priors
 
 """
-function set_priors!(sMMProblem::SMMProblem, priors::DataStructures.OrderedDict{String,Array{Float64,1}})
+function set_priors!(sMMProblem::SMMProblem, priors::OrderedDict{String,Array{Float64,1}})
 
   sMMProblem.priors = priors
 
 end
 
 """
-   set_empirical_moments!(sMMProblem::SMMProblem, empiricalMoments::DataStructures.OrderedDict{String,Array{Float64,1}})
+   set_empirical_moments!(sMMProblem::SMMProblem, empiricalMoments::OrderedDict{String,Array{Float64,1}})
 
 Function to change the field sMMProblem.empiricalMoments
 
 """
-function set_empirical_moments!(sMMProblem::SMMProblem, empiricalMoments::DataStructures.OrderedDict{String,Array{Float64,1}})
+function set_empirical_moments!(sMMProblem::SMMProblem, empiricalMoments::OrderedDict{String,Array{Float64,1}})
 
   sMMProblem.empiricalMoments = empiricalMoments
 
