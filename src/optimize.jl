@@ -5,8 +5,6 @@ Function to launch an optimization. To be used after the following functions
 have been called: (i) set_empirical_moments! (ii) set_priors!
 (iii) set_simulate_empirical_moments! (iv) construct_objective_function!
 """
-
-# [TODO] Instead of loading, just save the function periodically
 function smmoptimize!(sMMProblem::SMMProblem; verbose::Bool = true)
 
   # Initialize a BlackBoxOptim problem
@@ -22,7 +20,7 @@ function smmoptimize!(sMMProblem::SMMProblem; verbose::Bool = true)
   @showprogress for i=1:numberBatches
 
       if verbose == true
-        println("\n -------------------------------------")
+        println("-------------------------------------")
         println("Batch $(i) / $(numberBatches)")
         println("------------------------------------- \n")
       end
@@ -46,5 +44,16 @@ function smmoptimize!(sMMProblem::SMMProblem; verbose::Bool = true)
 
   return listBestFitness, listBestCandidates
 
+
+end
+
+"""
+  function smm_minimizer(sMMProblem::SMMProblem)
+
+Function to get the parameter value minimizing the objective function
+"""
+function smm_minimizer(sMMProblem::SMMProblem)
+
+  best_candidate(sMMProblem.bbResults)
 
 end

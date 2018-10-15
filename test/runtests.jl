@@ -32,7 +32,7 @@ end
 
         # When initialized, iter is equal to 0
         @test t.iter == 0
-        @test typeof(t.priors) == OrderedDict{String,Array{Float64,1}} 
+        @test typeof(t.priors) == OrderedDict{String,Array{Float64,1}}
         @test typeof(t.empiricalMoments) == OrderedDict{String,Array{Float64,1}}
         @test typeof(t.simulatedMoments) == OrderedDict{String, Float64}
         @test typeof(t.distanceEmpSimMoments) == Float64
@@ -40,7 +40,7 @@ end
         @test t.simulate_empirical_moments(1.0) == 1.0
         @test t.objective_function(1.0) == 1.0
         @test typeof(t.options) == SMMOptions
-        
+
 
     end
 
@@ -75,7 +75,7 @@ end
 
         # First component stores the value
         @test dictEmpiricalMoments["meanU"][1] == 0.05
-        # Second component stores the weight associated to 
+        # Second component stores the weight associated to
         @test dictEmpiricalMoments["meanU"][2] == 0.05
 
 
@@ -186,7 +186,7 @@ end
         set_priors!(t, dictPriors)
 
         testSearchRange = generate_bbSearchRange(t)
-            
+
         @test testSearchRange[1][1] == 0.01
         @test testSearchRange[1][2] == 0.9
         @test testSearchRange[2][1] == 0.0
@@ -262,7 +262,7 @@ end
 end
 
 
-@testset "Testing smmoptimize" begin 
+@testset "Testing smmoptimize" begin
 
 
     # 1d problem
@@ -280,7 +280,7 @@ end
 
             d = Normal(x[1])
             output = OrderedDict{String,Float64}()
-            
+
             output["meanU"] = mean(rand(d, 1000000))
 
             return output
@@ -330,7 +330,7 @@ end
 
             d = MvNormal( [x[1]; x[2]], eye(2))
             output = OrderedDict{String,Float64}()
-            
+
             draws = rand(d, 1000000)
             output["mean1"] = mean(draws[1,:])
             output["mean2"] = mean(draws[2,:])
@@ -389,7 +389,7 @@ end
 
             d = MvNormal( [x[1]; x[2]], eye(2))
             output = OrderedDict{String,Float64}()
-            
+
             draws = rand(d, 1000000)
             output["mean1"] = mean(draws[1,:])
             output["mean2"] = mean(draws[2,:])

@@ -1,9 +1,3 @@
-"""
-  read_priors(pathToCsv::String)
-
-Function to load priors stored in a csv file. Returns a dictionary. The csv
-file should have the following columns "name", "value", "upper_bound", "lower_bound"
-"""
 # Function to read priors from a csv file. returns a Dict
 #
 # input :
@@ -24,6 +18,12 @@ file should have the following columns "name", "value", "upper_bound", "lower_bo
 #--------
 # *
 #----------------------------------------------------------------------------
+"""
+  read_priors(pathToCsv::String)
+
+Function to load priors stored in a csv file. Returns a dictionary. The csv
+file should have the following columns "name", "value", "upper_bound", "lower_bound"
+"""
  function read_priors(pathToCsv::String)
 
    # initialize and empty Dictionary:
@@ -68,12 +68,6 @@ file should have the following columns "name", "value", "upper_bound", "lower_bo
 
  end
 
-"""
-  read_empirical_moments(pathToCsv::String)
-
-Function to load empirical moments stored in a csv file. Returns a dictionary.
-The csv file should have the following columns "name", "value", "weight"
-"""
 #----------------------------------------------------------------------------
 # Function to read moments and weights from a csv file. returns a DataFrame
 #
@@ -94,6 +88,12 @@ The csv file should have the following columns "name", "value", "weight"
 #--------
 #
 #----------------------------------------------------------------------------
+"""
+  read_empirical_moments(pathToCsv::String)
+
+Function to load empirical moments stored in a csv file. Returns a dictionary.
+The csv file should have the following columns "name", "value", "weight"
+"""
 function read_empirical_moments(pathToCsv::String)
 
   # initialize and empty Dictionary:
@@ -143,7 +143,6 @@ end
   saveSMMOptim(sMMProblem::SMMProblem; verbose::Bool = false, saveName::String = "")
 
 Function to save a SMMProblem to disk.
-
 """
 function saveSMMOptim(sMMProblem::SMMProblem; verbose::Bool = false, saveName::String = "")
 
@@ -177,7 +176,6 @@ end
   loadSMMOptim(saveName::String; verbose::Bool = false)
 
 Function to save a SMMProblem to disk.
-
 """
 function loadSMMOptim(saveName::String; verbose::Bool = false)
 

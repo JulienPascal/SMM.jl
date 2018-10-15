@@ -65,7 +65,7 @@ module SMM
 
   # Functions and types in optimize.jl
   #-----------------------------------
-  export smmoptimize!
+  export smmoptimize!, smm_minimizer
 
 
 
