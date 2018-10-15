@@ -1,12 +1,19 @@
 using SMM
 using Distributions
-using DataStructures
+#using DataStructures
 
 @static if VERSION < v"0.7.0-DEV.2005"
     using Base.Test
 else
     using Test
 end
+
+@static if VERSION < v"0.7.0"
+    using DataStructures
+else
+    using OrderedCollections
+end
+
 
 # To make sure Travis CI works as expected
 # @test 1 == 2
@@ -62,7 +69,7 @@ end
         # Second component stores the lower bound:
         @test dictPriors["alpha"][2] == 0.01
         # Third component stores the upper bound:
-        @test dictPriors["alpha"][2] == 0.01
+        @test dictPriors["alpha"][3] == 0.9
 
 
    end

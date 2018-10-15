@@ -15,7 +15,14 @@ module SMM
   using CSV
   using ProgressMeter
   using Calculus
-  using DataStructures
+
+  @static if VERSION < v"0.7.0"
+      using DataStructures
+  else
+      using OrderedCollections
+  end
+
+
 
   # Exports from BlackBoxOptim
   #---------------------------
