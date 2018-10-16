@@ -12,6 +12,12 @@ end
     using DataStructures
 else
     using OrderedCollections
+    # Because of this issue (https://github.com/JuliaIO/JLD2.jl/issues/107)
+    # we also need to import BlackBoxOptim to load and save
+    #----------------------------------------------------------------------
+    # (no need when using Julia 0.6)
+    using BlackBoxOptim
+
 end
 
 
