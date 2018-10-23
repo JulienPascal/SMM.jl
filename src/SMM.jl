@@ -7,7 +7,80 @@ This is the documentation for SMM.jl
 
 module SMM
 
-# package code goes here
+  # Dependencies
+  #-------------
+  using BlackBoxOptim
+  using JLD2
+  using Plots
+  using CSV
+  using ProgressMeter
+  using Calculus
+
+  @static if VERSION < v"0.7.0"
+      using DataStructures
+  else
+      using OrderedCollections
+  end
+
+
+
+  # Exports from BlackBoxOptim
+  #---------------------------
+  export best_candidate
+
+  # Includes
+  #---------
+  # Types
+  #------
+  include("types.jl");
+
+  # API
+  #----
+  include("api.jl")
+
+  # General functions, useful at several places
+  #---------------------------------------------
+  include("generic.jl")
+
+  # Functions to load and save
+  #--------------------------
+  include("save_load.jl")
+
+  # Functions to minimize the objective function
+  #---------------------------------------------
+  include("optimize.jl")
+
+  # Functions to do plots
+  #---------------------------------------------
+  include("plots.jl")
+
+  # Exports
+  #--------
+  # Functions and types in types.jl
+  #----------------------------------
+  export SMMOptions, SMMProblem
+  export default_function, rosenbrock2d
+
+  # Functions and types in api.jl
+  #-------------------------------
+
+  # Functions and types in generic.jl
+  #----------------------------------
+  export set_simulate_empirical_moments!, construct_objective_function!
+  export set_priors!, set_empirical_moments!, set_bbSetup!, generate_bbSearchRange
+
+  # Functions and types in save_load.jl
+  #------------------------------------
+  export read_priors, read_empirical_moments
+  export saveSMMOptim, loadSMMOptim
+
+  # Functions and types in optimize.jl
+  #-----------------------------------
+  export smmoptimize!, smm_minimizer
+
+  export smm_slices, drawMe
+
+
 
 
 end # module

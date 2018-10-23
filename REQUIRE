@@ -1,1 +1,8 @@
 julia 0.6
+BlackBoxOptim
+JLD2
+Plots
+CSV
+ProgressMeter
+Calculus
+DataStructures
