@@ -1,5 +1,12 @@
-using SMM
-using Distributions
+# Let's increase the number of workers
+#-------------------------------------
+maxNbWorkers = 3
+while nworkers() < maxNbWorkers
+  addprocs(1)
+end
+
+@everywhere using SMM
+@everywhere using Distributions
 using Optim
 
 @static if VERSION < v"0.7.0-DEV.2005"
@@ -9,9 +16,9 @@ else
 end
 
 @static if VERSION < v"0.7.0"
-    using DataStructures
+    @everywhere using DataStructures
 else
-    using OrderedCollections
+    @everywhere using OrderedCollections
     # Because of this issue (https://github.com/JuliaIO/JLD2.jl/issues/107)
     # we also need to import BlackBoxOptim and Optim to load and save
     #----------------------------------------------------------------------
@@ -127,15 +134,6 @@ end
     end
 
 end
-
-@testset "testing converting Symbol to Optim algo" begin
-
-      @test convert_to_optim_algo(:LBFGS) == LBFGS()
-      @test convert_to_optim_algo(:BFGS) == BFGS()
-      @test convert_to_optim_algo(:NelderMead) == NelderMead()
-
-end
-
 
 
 @testset "testing loading priors and empirical moments" begin
@@ -410,6 +408,57 @@ end
 
     end
 
+    @testset "Testing local to global 1d" begin
+
+
+      tol1dMean = 0.1
+
+      @everywhere function functionTest1d(x)
+
+          # When using one of the deterministic methods of Optim,
+          # we can safely "control" for randomness
+          #-----------------------------------------------------
+          srand(1234)
+          d = Normal(x[1])
+          output = OrderedDict{String,Float64}()
+
+          output["meanU"] = mean(rand(d, 1000000))
+
+          return output
+      end
+
+
+      t = SMMProblem(options = SMMOptions(maxFuncEvals=200,saveSteps = 100))
+
+      # For the test to make sense, we need to set the field
+      # t.empiricalMoments::OrderedDict{String,Array{Float64,1}}
+      #------------------------------------------------------
+      dictEmpiricalMoments = read_empirical_moments(joinpath(Pkg.dir("SMM"), "test/empiricalMomentsTest.csv"))
+      set_empirical_moments!(t, dictEmpiricalMoments)
+
+
+      dictPriors = OrderedDict{String,Array{Float64,1}}()
+      dictPriors["mu1"] = [0., -2.0, 2.0]
+      set_priors!(t, dictPriors)
+
+      # A. Set the function: parameter -> simulated moments
+      #----------------------------------------------------
+      set_simulate_empirical_moments!(t, functionTest1d)
+
+      # B. Construct the objective function, using the function: parameter -> simulated moments
+      # and moments' weights:
+      #----------------------------------------------------
+      construct_objective_function!(t)
+
+      local_to_global!(t, nums = maxNbWorkers, verbose = true)
+
+      @test smm_local_minimum(t) ≈ 0.0 atol = tol1dMean
+
+      @test smm_local_minimizer(t)[1] ≈ 0.05 atol = tol1dMean
+
+    end
+
+
     # 2d problem
     #-----------
     @testset "Testing smmoptimize with 2d and same magnitude" begin
@@ -421,7 +470,7 @@ end
         #----------------------------------------------------
         tol2dMean = 0.2
 
-        function functionTest2d(x)
+        @everywhere function functionTest2d(x)
 
             d = MvNormal( [x[1]; x[2]], eye(2))
             output = OrderedDict{String,Float64}()
@@ -466,7 +515,70 @@ end
         @test best_candidate(t.bbResults)[1] ≈ 1.0 atol = tol2dMean
         @test best_candidate(t.bbResults)[2] ≈ -1.0 atol = tol2dMean
 
+
+
     end
+
+    # 2d problem
+    #-----------
+    @testset "Testing local_to_global! with 2d and same magnitude" begin
+
+        # Rermark:
+        # It is important NOT to use srand()
+        # within the function simulate_empirical_moments!
+        # Otherwise, BlackBoxOptim does not find the solution
+        #----------------------------------------------------
+        tol2dMean = 0.2
+
+        @everywhere function functionTest2d(x)
+
+            d = MvNormal( [x[1]; x[2]], eye(2))
+            output = OrderedDict{String,Float64}()
+
+            # When using one of the deterministic methods of Optim,
+            # we can safely "control" for randomness
+            #-----------------------------------------------------
+            srand(1234)
+            draws = rand(d, 1000000)
+            output["mean1"] = mean(draws[1,:])
+            output["mean2"] = mean(draws[2,:])
+
+            return output
+        end
+
+
+        t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 500))
+
+
+        # For the test to make sense, we need to set the field
+        # t.empiricalMoments::OrderedDict{String,Array{Float64,1}}
+        #------------------------------------------------------
+        dictEmpiricalMoments = OrderedDict{String,Array{Float64,1}}()
+        dictEmpiricalMoments["mean1"] = [1.0; 1.0]
+        dictEmpiricalMoments["mean2"] = [-1.0; -1.0]
+        set_empirical_moments!(t, dictEmpiricalMoments)
+
+
+        dictPriors = OrderedDict{String,Array{Float64,1}}()
+        dictPriors["mu1"] = [0., -5.0, 5.0]
+        dictPriors["mu2"] = [0., -5.0, 5.0]
+        set_priors!(t, dictPriors)
+
+        # A. Set the function: parameter -> simulated moments
+        set_simulate_empirical_moments!(t, functionTest2d)
+
+        # B. Construct the objective function, using the function: parameter -> simulated moments
+        # and moments' weights:
+        construct_objective_function!(t)
+
+        local_to_global!(t, nums = nworkers(), verbose = true)
+
+        @test smm_local_minimum(t) ≈ 0.0 atol = tol2dMean
+
+        @test smm_local_minimizer(t)[1] ≈ 1.0 atol = tol2dMean
+        @test smm_local_minimizer(t)[2] ≈ - 1.0 atol = tol2dMean
+
+      end
 
     # 2d problem
     #-----------

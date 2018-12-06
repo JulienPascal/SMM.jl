@@ -169,13 +169,21 @@ function smm_local_minimum(sMMProblem::SMMProblem)
 end
 
 
-#=
 """
   local_to_global(sMMProblem::SMMProblem)
 
-Function to run
+Function to run several local minimization algorithms in parallel, with different
+starting values.
 """
-function local_to_global(sMMProblem::SMMProblem; nums::Int64 = 2, verbose::Bool = true)
+function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verbose::Bool = true)
+
+  # Safety checks
+  #--------------
+  if nums < nworkers()
+    Base.errors("nums < nworkers()")
+  elseif nums > nworkers()
+    info("nums > nworkers(). Some starting values will be ignored.")
+  end
 
   # To store minization results
   #----------------------------
@@ -183,55 +191,68 @@ function local_to_global(sMMProblem::SMMProblem; nums::Int64 = 2, verbose::Bool 
   refs = []
   refIndex = 1
 
+  # Generate upper and lower bounds vector readable by create_grid
+  #---------------------------------------------------------------
+  lower_bound = zeros(length(keys(sMMProblem.priors)))
+  upper_bound = zeros(length(keys(sMMProblem.priors)))
+
+  for (kIndex, k) in enumerate(keys(sMMProblem.priors))
+    lower_bound[kIndex] = sMMProblem.priors[k][2]
+    upper_bound[kIndex] = sMMProblem.priors[k][3]
+  end
 
   # Create a grid for starting points
   #----------------------------------
-
-
+  myGrid = create_grid(lower_bound, upper_bound, nums)
 
   # If the global optimizer is using BlackBoxOptim
   #-----------------------------------------------
   if is_optim_optimizer(sMMProblem.options.localOptimizer) == true
 
-    # A. Spawning
-    #------------
-    @sync for w in workers()
+      # A. Starting tasks on available workers
+      #---------------------------------------
+      @sync for (workerIndex, w) in enumerate(workers())
 
-      @async refs[refIndex] = @spawnat w
+        @async push!(results, @fetchfrom w wrap_smm_localmin(sMMProblem, myGrid[workerIndex,:], verbose = true))
 
-    end
+      end
 
-    # B. Fetching
-    #-------------
-    for w in workers()
 
-      push!(results, @fetch refs[refIndex])
-
-    end
-
-    # C. Looking for the minimum
+    # B. Looking for the minimum
     #----------------------------
     # Initialization
     minIndex = 0
     minValue = Inf
+    minimizerValue = zeros(length(keys(sMMProblem.priors)))
 
-    for w in workers()
+    for (workerIndex, w) in enumerate(workers())
 
-      minimumValue = Optim.minimum(results[w])
+      try
 
-      if minimumValue < minValue && Optim.converged(results[w]) == true
+        minimumValue = Optim.minimum(results[workerIndex])
+        minimizer = Optim.minimizer(results[workerIndex])[1]
 
-        minIndex = w
-        minValue = minimumValue
+        if minimumValue < minValue && Optim.converged(results[workerIndex]) == true
 
+          minIndex = workerIndex
+          minValue = minimumValue
+          minimizerValue = minimizer
+
+        end
+
+      catch myError
+        info("$(myError)")
       end
 
     end
 
+
     # D. If none of the optimization converged
     #-----------------------------------------
     if minIndex == 0
-      info("None of the local optimizer algorithm conerged.")
+      info("None of the local optimizer algorithm converged.")
+    else
+      sMMProblem.optimResults = results[minIndex]
     end
 
   # In the future, we may use other global minimizer
@@ -243,5 +264,62 @@ function local_to_global(sMMProblem::SMMProblem; nums::Int64 = 2, verbose::Bool 
 
   end
 
+  if verbose == true
+    info("Best value found with starting values = $(myGrid[minIndex,:]).")
+    info("Best value = $(minValue).")
+    info("Minimizer = $(minimizerValue)")
+  end
+
+
 end
-=#
+
+
+"""
+  smm_localmin(sMMProblem::SMMProblem, x0::Array{Float64,1}; verbose::Bool = true)
+
+Function find a local minimum using a local minimization routine, with starting value x0.
+To be used after the following functions have been called: (i) set_empirical_moments!
+(ii) set_priors! (iii) set_simulate_empirical_moments! (iv) construct_objective_function!
+"""
+function smm_localmin(sMMProblem::SMMProblem, x0::Array{Float64,1}; verbose::Bool = true)
+
+  # Let's use the result from the global maximizer as the starting value
+  #---------------------------------------------------------------------
+  if verbose == true
+    info("Starting value = $(x0)")
+  end
+
+
+  if is_local_optimizer(sMMProblem.options.localOptimizer) == true
+
+    optimResults = optimize(sMMProblem.objective_function, x0,
+                                      convert_to_optim_algo(sMMProblem.options.localOptimizer),
+                                      Optim.Options(iterations = sMMProblem.options.maxFuncEvals))
+
+  # In the future, we may use other local minimizer
+  # routines. For the moment, let's return an error
+  #-------------------------------------------------
+  else
+
+    Base.error("sMMProblem.options.localOptimizer = $(sMMProblem.options.localOptimizer) is not supported.")
+
+  end
+
+  return optimResults
+
+end
+
+
+"""
+
+"""
+function wrap_smm_localmin(sMMProblem::SMMProblem, x0::Array{Float64,1}; verbose::Bool = true)
+
+  try
+    smm_localmin(sMMProblem, x0, verbose = verbose)
+  catch myError
+    info("$(myError)")
+    info("Error with smm_localmin")
+  end
+
+end

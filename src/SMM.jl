@@ -86,6 +86,7 @@ module SMM
   export smmoptimize!, smm_minimizer
   export smm_refine_globalmin!, smm_local_minimizer
   export smm_local_minimum
+  export smm_localmin, local_to_global!
 
   # Functions in plots.jl
   #----------------------
