@@ -10,11 +10,13 @@ module SMM
   # Dependencies
   #-------------
   using BlackBoxOptim
+  using Optim
   using JLD2
   using Plots
   using CSV
   using ProgressMeter
   using Calculus
+  using CompEcon
 
   @static if VERSION < v"0.7.0"
       using DataStructures
@@ -60,6 +62,9 @@ module SMM
   #----------------------------------
   export SMMOptions, SMMProblem
   export default_function, rosenbrock2d
+  export is_global_optimizer, is_local_optimizer
+  export convert_to_optim_algo
+  export is_bb_optimizer, is_optim_optimizer
 
   # Functions and types in api.jl
   #-------------------------------
@@ -68,6 +73,8 @@ module SMM
   #----------------------------------
   export set_simulate_empirical_moments!, construct_objective_function!
   export set_priors!, set_empirical_moments!, set_bbSetup!, generate_bbSearchRange
+  export set_global_optimizer!
+  export create_grid, cartesian_grid
 
   # Functions and types in save_load.jl
   #------------------------------------
@@ -77,7 +84,11 @@ module SMM
   # Functions and types in optimize.jl
   #-----------------------------------
   export smmoptimize!, smm_minimizer
+  export smm_refine_globalmin!, smm_local_minimizer
+  export smm_local_minimum
 
+  # Functions in plots.jl
+  #----------------------
   export smm_slices, drawMe
 
 

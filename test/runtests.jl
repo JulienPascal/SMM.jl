@@ -1,6 +1,6 @@
 using SMM
 using Distributions
-#using DataStructures
+using Optim
 
 @static if VERSION < v"0.7.0-DEV.2005"
     using Base.Test
@@ -13,7 +13,7 @@ end
 else
     using OrderedCollections
     # Because of this issue (https://github.com/JuliaIO/JLD2.jl/issues/107)
-    # we also need to import BlackBoxOptim to load and save
+    # we also need to import BlackBoxOptim and Optim to load and save
     #----------------------------------------------------------------------
     # (no need when using Julia 0.6)
     using BlackBoxOptim
@@ -34,7 +34,8 @@ end
 
         # By default, the optimizer should be :adaptive_de_rand_1_bin_radiuslimited
         #--------------------------------------------------------------------------
-        @test t.bbOptimizer == :adaptive_de_rand_1_bin_radiuslimited
+        @test t.globalOptimizer == :dxnes
+	      @test t.localOptimizer == :LBFGS
 
     end
 
@@ -60,6 +61,81 @@ end
 
 
 end
+
+
+@testset "testing creation of grids" begin
+
+  a = zeros(3)
+  b = ones(3)
+  nums = 2
+
+  points = cartesian_grid(a, b, nums)
+
+  @test points[1] == (0.0, 0.0, 0.0)
+  @test points[2] == (1.0, 0.0, 0.0)
+  @test points[3] == (0.0, 1.0, 0.0)
+  @test points[4] == (1.0, 1.0, 0.0)
+  @test points[5] == (0.0, 0.0, 1.0)
+  @test points[6] == (1.0, 0.0, 1.0)
+  @test points[7] == (0.0, 1.0, 1.0)
+  @test points[8] == (1.0, 1.0, 1.0)
+
+  points = create_grid(a, b, nums)
+
+  @test points[1,:] == [0.0; 0.0; 0.0]
+  @test points[2,:] == [1.0, 0.0, 0.0]
+  @test points[3,:] == [0.0, 1.0, 0.0]
+  @test points[4,:] == [1.0, 1.0, 0.0]
+  @test points[5,:] == [0.0, 0.0, 1.0]
+  @test points[6,:] == [1.0, 0.0, 1.0]
+  @test points[7,:] == [0.0, 1.0, 1.0]
+  @test points[8,:] == [1.0, 1.0, 1.0]
+
+
+end
+
+@testset "testing checks on global algo" begin
+
+    listValidGlobalOptimizers = [:dxnes, :adaptive_de_rand_1_bin_radiuslimited, :xnes,
+                             :de_rand_1_bin_radiuslimited, :adaptive_de_rand_1_bin,
+                             :generating_set_search, :de_rand_1_bin,
+                             :separable_nes, :resampling_inheritance_memetic_search,
+                             :probabilistic_descent, :resampling_memetic_search,
+                             :de_rand_2_bin_radiuslimited, :de_rand_2_bin,
+                             :random_search, :simultaneous_perturbation_stochastic_approximation]
+
+
+    for globalOptim in listValidGlobalOptimizers
+
+      @test is_global_optimizer(globalOptim) == true
+
+    end
+
+end
+
+
+@testset "testing checks on local algo" begin
+
+  listValidLocalOptimizers = [:NelderMead, :SimulatedAnnealing, :ParticleSwarm,
+                            :BFGS, :LBFGS]
+
+
+    for globalOptim in listValidLocalOptimizers
+
+      @test is_local_optimizer(globalOptim) == true
+
+    end
+
+end
+
+@testset "testing converting Symbol to Optim algo" begin
+
+      @test convert_to_optim_algo(:LBFGS) == LBFGS()
+      @test convert_to_optim_algo(:BFGS) == BFGS()
+      @test convert_to_optim_algo(:NelderMead) == NelderMead()
+
+end
+
 
 
 @testset "testing loading priors and empirical moments" begin
@@ -325,6 +401,12 @@ end
         smmoptimize!(t, verbose = true)
 
         @test best_candidate(t.bbResults)[1] ≈ 0.05 atol = tol1dMean
+
+        # C. Testing refinement of the global max using a local routine
+        #--------------------------------------------------------------
+        @test smm_refine_globalmin!(t, verbose = true)[1] ≈ 0.05 atol = tol1dMean
+
+        @test smm_local_minimizer(t)[1] ≈ 0.05 atol = tol1dMean
 
     end
 
