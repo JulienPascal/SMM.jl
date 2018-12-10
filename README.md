@@ -34,7 +34,7 @@ Pkg.clone("https://github.com/JulienPascal/SMM.jl.git")
 See the following notebooks:
 * [`examples/example2dNormalParallel.ipynb`](examples/example2dNormalParallel.ipynb)
 * [`examples/example2dNormalSerial.ipynb`](examples/example2dNormalSerial.ipynb)
-* [`examples/exampleAR1Serial`](examples/exampleAR1Serial)
+* [`examples/exampleAR1Serial`](examples/exampleAR1Serial.ipynb)
 
 ## Related Packages
 
