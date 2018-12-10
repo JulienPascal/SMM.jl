@@ -188,22 +188,10 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
   # To store minization results
   #----------------------------
   results = []
-  refs = []
-  refIndex = 1
 
-  # Generate upper and lower bounds vector readable by create_grid
-  #---------------------------------------------------------------
-  lower_bound = zeros(length(keys(sMMProblem.priors)))
-  upper_bound = zeros(length(keys(sMMProblem.priors)))
-
-  for (kIndex, k) in enumerate(keys(sMMProblem.priors))
-    lower_bound[kIndex] = sMMProblem.priors[k][2]
-    upper_bound[kIndex] = sMMProblem.priors[k][3]
-  end
-
-  # Create a grid for starting points
+  # Look for valid starting values (for which convergence is reached)
   #----------------------------------
-  myGrid = create_grid(lower_bound, upper_bound, nums)
+  myGrid = search_starting_values(sMMProblem, nums, verbose = verbose)
 
   # If the global optimizer is using BlackBoxOptim
   #-----------------------------------------------
@@ -260,7 +248,7 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
   #-------------------------------------------------
   else
 
-    Base.error("sMMProblem.options.globalOptimizer = $(sMMProblem.options.globalOptimizer) is not supported.")
+    Base.error("sMMProblem.options.localOptimizer = $(sMMProblem.options.localOptimizer) is not supported.")
 
   end
 
@@ -321,5 +309,88 @@ function wrap_smm_localmin(sMMProblem::SMMProblem, x0::Array{Float64,1}; verbose
     info("$(myError)")
     info("Error with smm_localmin")
   end
+
+end
+
+
+"""
+  search_starting_values(sMMProblem::SMMProblem; verbose::Bool = true, a::Array{Float64,1}, b::Array{Float64,1}, nums::Int64)
+
+Search for nums valid starting values. To be used after the following functions have been called:
+(i) set_empirical_moments! (ii) set_priors! (iii) set_simulate_empirical_moments!
+(iv) construct_objective_function!
+"""
+function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbose::Bool = true)
+
+  # Safety Check
+  #-------------
+  if is_optim_optimizer(sMMProblem.options.localOptimizer) == false
+    Base.error("sMMProblem.options.localOptimizer = $(sMMProblem.options.localOptimizer) is not supported.")
+  end
+
+  if verbose == true
+    info("Searching for $(numPoints) valid starting values")
+  end
+
+  # Generate upper and lower bounds vector readable by create_grid
+  #---------------------------------------------------------------
+  lower_bound = zeros(length(keys(sMMProblem.priors)))
+  upper_bound = zeros(length(keys(sMMProblem.priors)))
+
+  for (kIndex, k) in enumerate(keys(sMMProblem.priors))
+    lower_bound[kIndex] = sMMProblem.priors[k][2]
+    upper_bound[kIndex] = sMMProblem.priors[k][3]
+  end
+
+  #Each row is a new point and each column is a dimension of this points.
+  Validx0 = zeros(numPoints, length(lower_bound))
+  nbValidx0Found = 0
+
+  # Looping until all the points have been found
+  #---------------------------------------------
+  while nbValidx0Found < numPoints
+
+    results = []
+
+    # Create a grid (stochastic draws)
+    #---------------------------------
+    myGrid = create_grid_stochastic(lower_bound, upper_bound, numPoints)
+
+    # Use available workers to simulate moments
+    #------------------------------------------
+    @sync for (workerIndex, w) in enumerate(workers())
+
+      @async push!(results, @fetchfrom w wrap_smm_localmin(sMMProblem, myGrid[workerIndex, :], verbose = true))
+
+    end
+
+    # Check for convergence
+    #----------------------
+    for (workerIndex, w) in enumerate(workers())
+
+      try
+
+        minimumValue = Optim.minimum(results[workerIndex])
+        minimizer = Optim.minimizer(results[workerIndex])[1]
+
+        if isinf(minimumValue) == false && Optim.converged(results[workerIndex]) == true
+
+          nbValidx0Found +=1
+
+          if nbValidx0Found < numPoints
+            Validx0[i,:] = myGrid[workerIndex, :]
+          end
+
+        end
+
+      catch myError
+        info("$(myError)")
+      end
+
+    end
+
+  end
+
+  return Validx0
 
 end

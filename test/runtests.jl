@@ -70,7 +70,7 @@ end
 end
 
 
-@testset "testing creation of grids" begin
+@testset "testing creation of Cartesian grids" begin
 
   a = zeros(3)
   b = ones(3)
@@ -97,6 +97,27 @@ end
   @test points[6,:] == [1.0, 0.0, 1.0]
   @test points[7,:] == [0.0, 1.0, 1.0]
   @test points[8,:] == [1.0, 1.0, 1.0]
+
+
+end
+
+@testset "testing creation of random grids" begin
+
+  a = zeros(3)
+  b = [1.0; 2.0; 3.0]
+  numPoints = 4
+
+  points = create_grid_stochastic(a, b, numPoints)
+
+  @test size(points, 1) == 4
+  @test size(points, 2) == 3
+
+  for i=1:size(points, 1)
+    for j=1:size(points, 2)
+      @test points[i,j] >= a[j]
+      @test points[i,j] <= b[j]
+    end
+  end
 
 
 end

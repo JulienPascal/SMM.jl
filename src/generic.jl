@@ -4,7 +4,6 @@
 Function to set the field simulate_empirical_moments for a SMMProblem.
 The function simulate_empirical_moments takes parameter values and return
 the corresponding simulate moments values.
-
 """
 function set_simulate_empirical_moments!(sMMProblem::SMMProblem, f::Function)
 
@@ -19,7 +18,6 @@ Function that construct an objective function, using the function
 SMMProblem.simulate_empirical_moments. For the moment, the objective function
 returns the mean of the percentage deviation of simulated moments from
 their true value.
-
 """
 function construct_objective_function!(sMMProblem::SMMProblem, objectiveType::Symbol = :percent)
 
@@ -295,5 +293,57 @@ function create_grid(a::Array{Float64,1}, b::Array{Float64,1}, nums::Int64; grid
   Fspace = fundefn(gridType, collect([nums for i =1:length(a)]), a, b)
 
 	Fnodes = funnode(Fspace)[1]
+
+end
+
+
+"""
+  create_grid_stochastic(a::Array{Float64,1}, b::Array{Float64,1}, nums::Int64)
+
+Function to create a grid. a is a vector of lower
+bounds, b a vector of upper bounds and numPoints is the number of points
+to be generated. The output is an Array{Float64,2}, where each row is a new point
+and each column is a dimension of this points.
+"""
+function create_grid_stochastic(a::Array{Float64,1}, b::Array{Float64,1}, numPoints::Int64; gridType::Symbol = :normal)
+
+	  #Safety checks
+	  #-------------
+	  if numPoints < 1
+	    Base.error("The input numPoints should be >= 1. numPoints = $(numPoints).")
+	  end
+
+	  if length(a) != length(b)
+	    Base.error("length(a) != length(b)")
+	  end
+
+    if gridType == :normal
+      d = MvNormal((a .+ b)./2, eye(length(a)))
+    else
+      Base.error("gridType has to be :normal")
+    end
+
+    # Loop until getting the desired number of points
+    #-------------------------------------------------
+    #Each row is a new point and each column is a dimension of this points.
+    pointsFound = zeros(numPoints, length(a))
+
+    nbPointsFound = 0
+    while nbPointsFound < numPoints
+      draws = rand(d, numPoints)
+
+      #Within upper and lower bound?
+      #-----------------------------
+      for i=1:size(draws,2)
+        # Take the sum to check all the inequalities at once
+        if sum(draws[:,i] .>= a) == length(a) && sum(draws[:,i] .<= b) == length(a)
+          pointsFound[i,:] = draws[:,i]
+          nbPointsFound +=1
+        end
+      end
+
+    end
+
+    return pointsFound
 
 end
