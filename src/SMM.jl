@@ -75,7 +75,7 @@ module SMM
   export set_simulate_empirical_moments!, construct_objective_function!
   export set_priors!, set_empirical_moments!, set_bbSetup!, generate_bbSearchRange
   export set_global_optimizer!
-  export create_grid, cartesian_grid, create_grid_stochastic
+  export create_grid, cartesian_grid, create_grid_stochastic, generate_std
 
   # Functions and types in save_load.jl
   #------------------------------------

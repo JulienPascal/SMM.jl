@@ -190,11 +190,11 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
   results = []
 
   # Look for valid starting values (for which convergence is reached)
-  #----------------------------------
+  #-------------------------------------------------------------------
   myGrid = search_starting_values(sMMProblem, nums, verbose = verbose)
 
-  # If the global optimizer is using BlackBoxOptim
-  #-----------------------------------------------
+  # If the local optimizer is using Optim
+  #--------------------------------------
   if is_optim_optimizer(sMMProblem.options.localOptimizer) == true
 
       # A. Starting tasks on available workers
@@ -243,7 +243,7 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
       sMMProblem.optimResults = results[minIndex]
     end
 
-  # In the future, we may use other global minimizer
+  # In the future, we may use other local minimizer
   # routines. For the moment, let's return an error
   #-------------------------------------------------
   else
@@ -320,7 +320,7 @@ Search for nums valid starting values. To be used after the following functions 
 (i) set_empirical_moments! (ii) set_priors! (iii) set_simulate_empirical_moments!
 (iv) construct_objective_function!
 """
-function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbose::Bool = true)
+function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbose::Bool = true, maxNbTrials::Int64 = 1000)
 
   # Safety Check
   #-------------
@@ -343,24 +343,43 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
   end
 
   #Each row is a new point and each column is a dimension of this points.
+  #---------------------------------------------------------------------
   Validx0 = zeros(numPoints, length(lower_bound))
   nbValidx0Found = 0
+
+  # Create many grids (stochastic draws) with many potential points
+  #----------------------------------------------------------------
+  if verbose == true
+    info("Creating $(maxNbTrials) grids")
+  end
+
+  listGrids = []
+  for i=1:maxNbTrials
+    push!(listGrids, create_grid_stochastic(lower_bound, upper_bound, numPoints, gridType = :uniform))
+  end
+
+  if verbose == true
+    info("done.")
+  end
+
+  listGridsIndex = 0
 
   # Looping until all the points have been found
   #---------------------------------------------
   while nbValidx0Found < numPoints
 
     results = []
+    listGridsIndex += 1
 
-    # Create a grid (stochastic draws)
-    #---------------------------------
-    myGrid = create_grid_stochastic(lower_bound, upper_bound, numPoints)
+    if listGridsIndex > maxNbTrials
+      Base.error("Maximum number of attempts reached without success. maxNbTrials = $(maxNbTrials)")
+    end
 
     # Use available workers to simulate moments
     #------------------------------------------
     @sync for (workerIndex, w) in enumerate(workers())
 
-      @async push!(results, @fetchfrom w wrap_smm_localmin(sMMProblem, myGrid[workerIndex, :], verbose = true))
+      @async push!(results, @fetchfrom w wrap_smm_localmin(sMMProblem, listGrids[listGridsIndex][workerIndex, :], verbose = true))
 
     end
 
@@ -377,8 +396,10 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
 
           nbValidx0Found +=1
 
-          if nbValidx0Found < numPoints
-            Validx0[i,:] = myGrid[workerIndex, :]
+          if nbValidx0Found <= numPoints
+
+            Validx0[nbValidx0Found,:] = listGrids[listGridsIndex][workerIndex, :]
+            info("Valid starting value = $(Validx0[nbValidx0Found,:])")
           end
 
         end
@@ -389,6 +410,10 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
 
     end
 
+  end
+
+  if verbose == true
+    info("Found $(nbValidx0Found) valid starting values")
   end
 
   return Validx0

@@ -105,18 +105,39 @@ end
 
   a = zeros(3)
   b = [1.0; 2.0; 3.0]
-  numPoints = 4
+  numPoints = 100
 
-  points = create_grid_stochastic(a, b, numPoints)
 
-  @test size(points, 1) == 4
-  @test size(points, 2) == 3
+  @testset "drawing from a multivariate normal" begin
 
-  for i=1:size(points, 1)
-    for j=1:size(points, 2)
-      @test points[i,j] >= a[j]
-      @test points[i,j] <= b[j]
+    points = create_grid_stochastic(a, b, numPoints, gridType = :normal, alpha = 0.05)
+
+    @test size(points, 1) == numPoints
+    @test size(points, 2) == length(a)
+
+    for i=1:size(points, 1)
+      for j=1:size(points, 2)
+        @test points[i,j] >= a[j]
+        @test points[i,j] <= b[j]
+      end
     end
+
+  end
+
+  @testset "drawing from a multivariate uniform" begin
+
+    points = create_grid_stochastic(a, b, numPoints, gridType = :uniform)
+
+    @test size(points, 1) == numPoints
+    @test size(points, 2) == length(a)
+
+    for i=1:size(points, 1)
+      for j=1:size(points, 2)
+        @test points[i,j] >= a[j]
+        @test points[i,j] <= b[j]
+      end
+    end
+
   end
 
 
@@ -384,7 +405,7 @@ end
         #----------------------------------------------------
         tol1dMean = 0.1
 
-        function functionTest1d(x)
+        @everywhere function functionTest1d(x)
 
             d = Normal(x[1])
             output = OrderedDict{String,Float64}()
