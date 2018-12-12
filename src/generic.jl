@@ -68,6 +68,10 @@ function construct_objective_function!(sMMProblem::SMMProblem, objectiveType::Sy
 
         distanceEmpSimMoments = mean(arrayDistance)
 
+        if sMMProblem.options.showDistance == true
+          println("distance = $(distanceEmpSimMoments)")
+        end
+
       end
 
       return distanceEmpSimMoments

@@ -7,7 +7,7 @@
 [![codecov.io](http://codecov.io/github/JulienPascal/SMM.jl/coverage.svg?branch=master)](http://codecov.io/github/JulienPascal/SMM.jl?branch=master)
 
 `SMM.jl` is a package designed to facilitate the estimation of economic models
-via the [Simulated Method of Moments](https://en.wikipedia.org/wiki/Method_of_simulated_moments). It relies on [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) to perform the minimization.
+via the [Simulated Method of Moments](https://en.wikipedia.org/wiki/Method_of_simulated_moments). It relies on [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) and [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) to perform the minimization.
 
 
 ## Philosophy
@@ -16,7 +16,7 @@ via the [Simulated Method of Moments](https://en.wikipedia.org/wiki/Method_of_si
 * the minimizing algorithm should be able to run in **parallel**, as the computational cost of simulating moments, for a given parameter value, is potentially high.
 * Parallelization within the function generating simulated moments is difficult
 to achieve. This is generally the case when working with the simulated method of moments,
- as the time series generated are serially correlated. This is why parallelization is done at the level of the minimization
+ as the time series generated are often serially correlated. This is why parallelization is done at the level of the minimization
 algorithm itself.
 * The minimizing algorithm should search for a **global** minimum, as the
 objective function may have multiple local minima.
@@ -35,6 +35,7 @@ See the following notebooks:
 * [`examples/example2dNormalParallel.ipynb`](examples/example2dNormalParallel.ipynb)
 * [`examples/example2dNormalSerial.ipynb`](examples/example2dNormalSerial.ipynb)
 * [`examples/exampleAR1Serial`](examples/exampleAR1Serial.ipynb)
+* [examples/exampleLocalToGlobal.ipynb](examples/exampleLocalToGlobal.ipynb)
 
 ## Related Packages
 

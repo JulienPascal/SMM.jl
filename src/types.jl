@@ -1,8 +1,7 @@
 """
 	SMMOptions
 
-SMMOptions is a struct that contains options related to the optimization
-
+SMMOptions is a struct that contains options related to the optimization.
 """
 struct SMMOptions
 	globalOptimizer::Symbol #algorithm for finding a global maximum
@@ -10,13 +9,15 @@ struct SMMOptions
 	maxFuncEvals::Int64			#maximum number of evaluations
 	saveSteps::Int64				#maximum number of steps
 	saveName::String				#name under which the optimization should be saved
+	showDistance::Bool			#show the distance, everytime the objective function is calculated?
 end
 
 function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 											localOptimizer::Symbol=:LBFGS,
 											maxFuncEvals::Int64=1000,
 											saveSteps::Int64 = 100,
-											saveName::String = string(Dates.now()))
+											saveName::String = string(Dates.now()),
+											showDistance::Bool = false)
 
 	# Safety Checks
 	#--------------
@@ -49,7 +50,8 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 						localOptimizer,
 						maxFuncEvals,
 						saveSteps,
-						saveName)
+						saveName,
+						showDistance)
 
 end
 
@@ -57,8 +59,7 @@ end
 	SMMProblem
 
 SMMProblem is a mutable struct that caries all the information needed to
-perform the optimization and display the results
-
+perform the optimization and display the results.
 """
 mutable struct SMMProblem
 	iter::Int64
@@ -105,7 +106,7 @@ end
 """
 	default_function(x)
 
-Function x->x. Used to initialize functions
+Function x->x. Used to initialize functions.
 """
 function default_function(x)
 	println("default_function, returns input")
@@ -215,7 +216,7 @@ end
 """
 	convert_to_optim_algo(s::Symbol)
 
-function to convert local optimizer (of type Symbol) to Optim algo
+function to convert local optimizer (of type Symbol) to an Optim algo.
 """
 function convert_to_optim_algo(s::Symbol)
 

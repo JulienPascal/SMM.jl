@@ -173,7 +173,8 @@ end
   local_to_global(sMMProblem::SMMProblem)
 
 Function to run several local minimization algorithms in parallel, with different
-starting values.
+starting values. Changes sMMProblem.optimResults. This function also returns
+a list containing Optim results, for which convergence was reached.
 """
 function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verbose::Bool = true)
 
@@ -212,19 +213,23 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
     minIndex = 0
     minValue = Inf
     minimizerValue = zeros(length(keys(sMMProblem.priors)))
+    nbConvergenceReached = 0
+    listOptimResults = []
 
     for (workerIndex, w) in enumerate(workers())
 
       try
 
         minimumValue = Optim.minimum(results[workerIndex])
-        minimizer = Optim.minimizer(results[workerIndex])[1]
+        minimizer = Optim.minimizer(results[workerIndex])
 
         if minimumValue < minValue && Optim.converged(results[workerIndex]) == true
 
           minIndex = workerIndex
           minValue = minimumValue
           minimizerValue = minimizer
+          nbConvergenceReached += 1
+          push!(listOptimResults, results[workerIndex])
 
         end
 
@@ -240,6 +245,8 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
     if minIndex == 0
       info("None of the local optimizer algorithm converged.")
     else
+      info("Convergence reached for $(nbConvergenceReached) worker(s).")
+      info("Minimum value found with worker $(minIndex)")
       sMMProblem.optimResults = results[minIndex]
     end
 
@@ -253,11 +260,14 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
   end
 
   if verbose == true
-    info("Best value found with starting values = $(myGrid[minIndex,:]).")
-    info("Best value = $(minValue).")
-    info("Minimizer = $(minimizerValue)")
+    if nbConvergenceReached != 0
+      info("Best value found with starting values = $(myGrid[minIndex,:]).")
+      info("Best value = $(minValue).")
+      info("Minimizer = $(minimizerValue)")
+    end
   end
 
+  return listOptimResults
 
 end
 
@@ -281,8 +291,8 @@ function smm_localmin(sMMProblem::SMMProblem, x0::Array{Float64,1}; verbose::Boo
   if is_local_optimizer(sMMProblem.options.localOptimizer) == true
 
     optimResults = optimize(sMMProblem.objective_function, x0,
-                                      convert_to_optim_algo(sMMProblem.options.localOptimizer),
-                                      Optim.Options(iterations = sMMProblem.options.maxFuncEvals))
+                            convert_to_optim_algo(sMMProblem.options.localOptimizer),
+                            Optim.Options(iterations = sMMProblem.options.maxFuncEvals))
 
   # In the future, we may use other local minimizer
   # routines. For the moment, let's return an error
@@ -332,8 +342,8 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
     info("Searching for $(numPoints) valid starting values")
   end
 
-  # Generate upper and lower bounds vector readable by create_grid
-  #---------------------------------------------------------------
+  # Generate upper and lower bounds vector readable by create_grid_stochastic
+  #--------------------------------------------------------------------------
   lower_bound = zeros(length(keys(sMMProblem.priors)))
   upper_bound = zeros(length(keys(sMMProblem.priors)))
 
@@ -350,16 +360,12 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
   # Create many grids (stochastic draws) with many potential points
   #----------------------------------------------------------------
   if verbose == true
-    info("Creating $(maxNbTrials) grids")
+    info("Creating $(maxNbTrials) potential grids")
   end
 
   listGrids = []
   for i=1:maxNbTrials
     push!(listGrids, create_grid_stochastic(lower_bound, upper_bound, numPoints, gridType = :uniform))
-  end
-
-  if verbose == true
-    info("done.")
   end
 
   listGridsIndex = 0
@@ -379,7 +385,7 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
     #------------------------------------------
     @sync for (workerIndex, w) in enumerate(workers())
 
-      @async push!(results, @fetchfrom w wrap_smm_localmin(sMMProblem, listGrids[listGridsIndex][workerIndex, :], verbose = true))
+      @async push!(results, @fetchfrom w sMMProblem.objective_function(listGrids[listGridsIndex][workerIndex, :]))
 
     end
 
@@ -389,10 +395,9 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
 
       try
 
-        minimumValue = Optim.minimum(results[workerIndex])
-        minimizer = Optim.minimizer(results[workerIndex])[1]
+        distanceValue = results[workerIndex]
 
-        if isinf(minimumValue) == false && Optim.converged(results[workerIndex]) == true
+        if isinf(distanceValue) == false && distanceValue != 999999.0
 
           nbValidx0Found +=1
 
