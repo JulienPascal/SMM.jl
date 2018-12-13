@@ -174,7 +174,7 @@ end
 
 Function to run several local minimization algorithms in parallel, with different
 starting values. Changes sMMProblem.optimResults. This function also returns
-a list containing Optim results, for which convergence was reached.
+a list containing Optim results.
 """
 function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verbose::Bool = true)
 
@@ -218,6 +218,8 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
 
     for (workerIndex, w) in enumerate(workers())
 
+      push!(listOptimResults, results[workerIndex])
+
       try
 
         minimumValue = Optim.minimum(results[workerIndex])
@@ -229,7 +231,6 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
           minValue = minimumValue
           minimizerValue = minimizer
           nbConvergenceReached += 1
-          push!(listOptimResults, results[workerIndex])
 
         end
 

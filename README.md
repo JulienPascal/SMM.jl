@@ -35,7 +35,7 @@ See the following notebooks:
 * [`examples/example2dNormalParallel.ipynb`](examples/example2dNormalParallel.ipynb)
 * [`examples/example2dNormalSerial.ipynb`](examples/example2dNormalSerial.ipynb)
 * [`examples/exampleAR1Serial`](examples/exampleAR1Serial.ipynb)
-* [examples/exampleLocalToGlobal.ipynb](examples/exampleLocalToGlobal.ipynb)
+* [`examples/exampleLocalToGlobal.ipynb`](examples/exampleLocalToGlobal.ipynb)
 
 ## Related Packages
 
