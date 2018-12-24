@@ -96,15 +96,29 @@ function smm_refine_globalmin!(sMMProblem::SMMProblem; verbose::Bool = true)
   #---------------------------------------------------------------------
   if verbose == true
     info("Refining the global maximum using a local algorithm.")
+    info("Using Fminbox = $(sMMProblem.options.minBox)")
     info("Starting value = $(x0)")
   end
 
 
   if is_local_optimizer(sMMProblem.options.localOptimizer) == true
 
-    sMMProblem.optimResults = optimize(sMMProblem.objective_function, x0,
-                                      convert_to_optim_algo(sMMProblem.options.localOptimizer),
-                                      Optim.Options(iterations = sMMProblem.options.maxFuncEvals))
+    # If using Fminbox option is true
+    #-------------------------------
+    if sMMProblem.options.minBox == true
+
+      lower = create_lower_bound(sMMProblem)
+      upper = create_upper_bound(sMMProblem)
+
+      sMMProblem.optimResults = optimize(sMMProblem.objective_function, x0, lower, upper,
+                                        iterations = sMMProblem.options.maxFuncEvals,
+                                        convert_to_fminbox(sMMProblem.options.localOptimizer))
+
+    else
+      sMMProblem.optimResults = optimize(sMMProblem.objective_function, x0,
+                                        convert_to_optim_algo(sMMProblem.options.localOptimizer),
+                                        Optim.Options(iterations = sMMProblem.options.maxFuncEvals))
+    end
 
   # In the future, we may use other local minimizer
   # routines. For the moment, let's return an error
@@ -286,14 +300,27 @@ function smm_localmin(sMMProblem::SMMProblem, x0::Array{Float64,1}; verbose::Boo
   #---------------------------------------------------------------------
   if verbose == true
     info("Starting value = $(x0)")
+    info("Using Fminbox = $(sMMProblem.options.minBox)")
   end
 
 
   if is_local_optimizer(sMMProblem.options.localOptimizer) == true
 
-    optimResults = optimize(sMMProblem.objective_function, x0,
+    # If using Fminbox option is true
+    #-------------------------------
+    if sMMProblem.options.minBox == true
+
+      lower = create_lower_bound(sMMProblem)
+      upper = create_upper_bound(sMMProblem)
+
+      optimResults = optimize(sMMProblem.objective_function, x0, lower, upper,
+                                        iterations = sMMProblem.options.maxFuncEvals,
+                                        convert_to_fminbox(sMMProblem.options.localOptimizer))
+    else
+      optimResults = optimize(sMMProblem.objective_function, x0,
                             convert_to_optim_algo(sMMProblem.options.localOptimizer),
                             Optim.Options(iterations = sMMProblem.options.maxFuncEvals))
+    end
 
   # In the future, we may use other local minimizer
   # routines. For the moment, let's return an error

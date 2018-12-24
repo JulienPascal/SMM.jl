@@ -187,6 +187,36 @@ function generate_bbSearchRange(sMMProblem::SMMProblem)
   [(sMMProblem.priors[k][2], sMMProblem.priors[k][3]) for k in keys(sMMProblem.priors)]
 end
 
+"""
+  create_lower_bound(sMMProblem::SMMProblem)
+
+Function to generate a lower bound used by Optim when minimizing with Fminbox.
+The lower bound is of type Array{Float64,1}.
+"""
+function create_lower_bound(sMMProblem::SMMProblem)
+
+  # sMMProblem.priors["key"][1] contains the initial guess
+  # sMMProblem.priors["key"][2] contains the lower bound
+  # sMMProblem.priors["key"][3] contains the upper bound
+  #-----------------------------------------------------
+  [sMMProblem.priors[k][2] for k in keys(sMMProblem.priors)]
+end
+
+"""
+  create_upper_bound(sMMProblem::SMMProblem)
+
+Function to generate a lower bound used by Optim when minimizing with Fminbox.
+The upper bound is of type Array{Float64,1}.
+"""
+function create_upper_bound(sMMProblem::SMMProblem)
+
+  # sMMProblem.priors["key"][1] contains the initial guess
+  # sMMProblem.priors["key"][2] contains the lower bound
+  # sMMProblem.priors["key"][3] contains the upper bound
+  #-----------------------------------------------------
+  [sMMProblem.priors[k][3] for k in keys(sMMProblem.priors)]
+end
+
 
 """
   cartesian_grid(a::Array{Float64,1}, b::Array{Float64,1}, nums::Int64)
