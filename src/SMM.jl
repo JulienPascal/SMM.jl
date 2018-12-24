@@ -64,7 +64,7 @@ module SMM
   export SMMOptions, SMMProblem
   export default_function, rosenbrock2d
   export is_global_optimizer, is_local_optimizer
-  export convert_to_optim_algo
+  export convert_to_optim_algo, convert_to_fminbox
   export is_bb_optimizer, is_optim_optimizer
 
   # Functions and types in api.jl
@@ -74,6 +74,7 @@ module SMM
   #----------------------------------
   export set_simulate_empirical_moments!, construct_objective_function!
   export set_priors!, set_empirical_moments!, set_bbSetup!, generate_bbSearchRange
+  export create_lower_bound, create_upper_bound
   export set_global_optimizer!
   export create_grid, cartesian_grid, create_grid_stochastic, generate_std
 

@@ -10,6 +10,7 @@ struct SMMOptions
 	saveSteps::Int64				#maximum number of steps
 	saveName::String				#name under which the optimization should be saved
 	showDistance::Bool			#show the distance, everytime the objective function is calculated?
+	minBox::Bool						#When looking for a local maximum, use Fminbox ? 
 end
 
 function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
@@ -17,7 +18,8 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 											maxFuncEvals::Int64=1000,
 											saveSteps::Int64 = 100,
 											saveName::String = string(Dates.now()),
-											showDistance::Bool = false)
+											showDistance::Bool = false,
+											minBox::Bool = false)
 
 	# Safety Checks
 	#--------------
@@ -51,7 +53,8 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 						maxFuncEvals,
 						saveSteps,
 						saveName,
-						showDistance)
+						showDistance,
+						minBox)
 
 end
 
@@ -263,5 +266,60 @@ function convert_to_optim_algo(s::Symbol)
 	end
 
 	return output
+
+end
+
+"""
+	convert_to_fminbox(s::Symbol)
+
+function to convert local optimizer (of type Symbol) to a Fminbox usable
+by Optim.
+"""
+function convert_to_fminbox(s::Symbol)
+
+
+		if s == :NelderMead
+
+			output = Fminbox{NelderMead}()
+
+		elseif s == :SimulatedAnnealing
+
+			output = Fminbox{SimulatedAnnealing}()
+
+		elseif s == :ParticleSwarm
+
+			output = Fminbox{ParticleSwarm}()
+
+		elseif s == :BFGS
+
+			output = Fminbox{BFGS}()
+
+		elseif s == :LBFGS
+
+			output = Fminbox{LBFGS}()
+
+		elseif s == :ConjugateGradient
+
+			output = Fminbox{ConjugateGradient}()
+
+		elseif s == :GradientDescent
+
+			output = Fminbox{GradientDescent}()
+
+		elseif s == :MomentumGradientDescent
+
+			output = Fminbox{MomentumGradientDescent}()
+
+		elseif s == :AcceleratedGradientDescent
+
+			output = Fminbox{AcceleratedGradientDescent}()
+
+		else
+
+			Base.error("$(s) is not in the list of algorithm supported by Optim.")
+
+		end
+
+		return output
 
 end
