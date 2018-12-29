@@ -76,17 +76,6 @@ end
   b = ones(3)
   nums = 2
 
-  # points = cartesian_grid(a, b, nums)
-  #
-  # @test points[1] == (0.0, 0.0, 0.0)
-  # @test points[2] == (1.0, 0.0, 0.0)
-  # @test points[3] == (0.0, 1.0, 0.0)
-  # @test points[4] == (1.0, 1.0, 0.0)
-  # @test points[5] == (0.0, 0.0, 1.0)
-  # @test points[6] == (1.0, 0.0, 1.0)
-  # @test points[7] == (0.0, 1.0, 1.0)
-  # @test points[8] == (1.0, 1.0, 1.0)
-
   points = create_grid(a, b, nums)
 
   @test points[1,:] == [0.0; 0.0; 0.0]
@@ -166,7 +155,8 @@ end
 @testset "testing checks on local algo" begin
 
   listValidLocalOptimizers = [:NelderMead, :SimulatedAnnealing, :ParticleSwarm,
-                            :BFGS, :LBFGS]
+                            :BFGS, :LBFGS, :ConjugateGradient, :GradientDescent,
+                            :MomentumGradientDescent, :AcceleratedGradientDescent]
 
 
     for localOptim in listValidLocalOptimizers
@@ -183,7 +173,8 @@ end
   # ParticleSwarm is not working here
   # I don't know why
   listValidLocalOptimizers = [:NelderMead, :SimulatedAnnealing,
-                            :BFGS, :LBFGS]
+                            :BFGS, :LBFGS, :ConjugateGradient, :GradientDescent,
+                            :MomentumGradientDescent, :AcceleratedGradientDescent]
 
     f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
     x0 = [0.0, 0.0]
@@ -207,7 +198,8 @@ end
   # ParticleSwarm is not working here
   # I don't know why
   listValidLocalOptimizers = [:NelderMead, :SimulatedAnnealing,
-                            :BFGS, :LBFGS]
+                            :BFGS, :LBFGS, :ConjugateGradient, :GradientDescent,
+                            :MomentumGradientDescent, :AcceleratedGradientDescent]
 
     f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
     x0 = [0.0, 0.0]
