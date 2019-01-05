@@ -233,11 +233,7 @@ by Optim.
 function convert_to_fminbox(s::Symbol)
 
 	# Old API (before v0.15.0)
-	if VersionNumber(Pkg.installed("Optim")) < VersionNumber("v0.15.0")
-		eval(Meta.parse("Fminbox{$(s)}()"))
-	# New API (from v0.15.0)
-	# Does not work
-	# else
-	# 	eval(Meta.parse("Fminbox($(s)())"))
-	# end
+	# To be changed when switching to Julia v0.7
+	eval(Meta.parse("Fminbox{$(s)}()"))
+
 end
