@@ -76,7 +76,7 @@ module SMM
   export set_priors!, set_empirical_moments!, set_bbSetup!, generate_bbSearchRange
   export create_lower_bound, create_upper_bound
   export set_global_optimizer!
-  export create_grid, cartesian_grid, create_grid_stochastic, generate_std
+  export create_grid, create_grid_stochastic, generate_std
 
   # Functions and types in save_load.jl
   #------------------------------------

@@ -28,7 +28,7 @@ else
 end
 
 
-# To make sure Travis CI works as expected
+# Uncomment to make sure Travis CI works as expected
 # @test 1 == 2
 
 
@@ -75,17 +75,6 @@ end
   a = zeros(3)
   b = ones(3)
   nums = 2
-
-  points = cartesian_grid(a, b, nums)
-
-  @test points[1] == (0.0, 0.0, 0.0)
-  @test points[2] == (1.0, 0.0, 0.0)
-  @test points[3] == (0.0, 1.0, 0.0)
-  @test points[4] == (1.0, 1.0, 0.0)
-  @test points[5] == (0.0, 0.0, 1.0)
-  @test points[6] == (1.0, 0.0, 1.0)
-  @test points[7] == (0.0, 1.0, 1.0)
-  @test points[8] == (1.0, 1.0, 1.0)
 
   points = create_grid(a, b, nums)
 
@@ -166,16 +155,71 @@ end
 @testset "testing checks on local algo" begin
 
   listValidLocalOptimizers = [:NelderMead, :SimulatedAnnealing, :ParticleSwarm,
-                            :BFGS, :LBFGS]
+                            :BFGS, :LBFGS, :ConjugateGradient, :GradientDescent,
+                            :MomentumGradientDescent, :AcceleratedGradientDescent]
 
 
-    for globalOptim in listValidLocalOptimizers
+    for localOptim in listValidLocalOptimizers
 
-      @test is_local_optimizer(globalOptim) == true
+      @test is_local_optimizer(localOptim) == true
 
     end
 
 end
+
+@testset "testing FminBox, non binding" begin
+
+  atolOptim = 0.5
+  # ParticleSwarm is not working here
+  # I don't know why
+  listValidLocalOptimizers = [:NelderMead, :SimulatedAnnealing,
+                            :BFGS, :LBFGS, :ConjugateGradient, :GradientDescent,
+                            :MomentumGradientDescent, :AcceleratedGradientDescent]
+
+    f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+    x0 = [0.0, 0.0]
+    lower = [-2.0; -2.0]
+    upper = [2.0; 2.0]
+
+    for localOptim in listValidLocalOptimizers
+
+      results = optimize(f, x0, lower, upper, iterations = 2000, convert_to_fminbox(localOptim))
+
+      @test Optim.minimizer(results)[1] ≈ 1.0 atol = atolOptim
+      @test Optim.minimizer(results)[2] ≈ 1.0 atol = atolOptim
+
+    end
+
+end
+
+@testset "testing FminBox binding" begin
+
+  atolOptim = 1e-1
+  # ParticleSwarm is not working here
+  # I don't know why
+  listValidLocalOptimizers = [:NelderMead, :SimulatedAnnealing,
+                            :BFGS, :LBFGS, :ConjugateGradient, :GradientDescent,
+                            :MomentumGradientDescent, :AcceleratedGradientDescent]
+
+    f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+    x0 = [0.0, 0.0]
+    lower = [-2.0; -2.0]
+    upper = [0.5; 0.5]
+
+    for localOptim in listValidLocalOptimizers
+
+
+      results = optimize(f, x0, lower, upper, iterations = 2000, convert_to_fminbox(localOptim))
+
+      @test Optim.minimizer(results)[1] < 0.5
+      @test Optim.minimizer(results)[1] > -2.0
+      @test Optim.minimizer(results)[2] < 0.5
+      @test Optim.minimizer(results)[2] > -2.0
+
+    end
+
+end
+
 
 
 @testset "testing loading priors and empirical moments" begin
@@ -500,6 +544,57 @@ end
 
     end
 
+    @testset "Testing local to global 1d with FminBox" begin
+
+
+      tol1dMean = 0.1
+
+      @everywhere function functionTest1d(x)
+
+          # When using one of the deterministic methods of Optim,
+          # we can safely "control" for randomness
+          #-----------------------------------------------------
+          srand(1234)
+          d = Normal(x[1])
+          output = OrderedDict{String,Float64}()
+
+          output["meanU"] = mean(rand(d, 1000000))
+
+          return output
+      end
+
+      # Let's try with the optim minBox on
+      #-----------------------------------
+      t = SMMProblem(options = SMMOptions(maxFuncEvals=200, saveSteps = 100, localOptimizer = :LBFGS, minBox = true))
+
+      # For the test to make sense, we need to set the field
+      # t.empiricalMoments::OrderedDict{String,Array{Float64,1}}
+      #------------------------------------------------------
+      dictEmpiricalMoments = read_empirical_moments(joinpath(Pkg.dir("SMM"), "test/empiricalMomentsTest.csv"))
+      set_empirical_moments!(t, dictEmpiricalMoments)
+
+
+      dictPriors = OrderedDict{String,Array{Float64,1}}()
+      dictPriors["mu1"] = [0., -2.0, 2.0]
+      set_priors!(t, dictPriors)
+
+      # A. Set the function: parameter -> simulated moments
+      #----------------------------------------------------
+      set_simulate_empirical_moments!(t, functionTest1d)
+
+      # B. Construct the objective function, using the function: parameter -> simulated moments
+      # and moments' weights:
+      #----------------------------------------------------
+      construct_objective_function!(t)
+
+      local_to_global!(t, nums = maxNbWorkers, verbose = true)
+
+      @test smm_local_minimum(t) ≈ 0.0 atol = tol1dMean
+
+      @test smm_local_minimizer(t)[1] ≈ 0.05 atol = tol1dMean
+
+    end
+
 
     # 2d problem
     #-----------
@@ -589,7 +684,7 @@ end
         end
 
 
-        t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 500))
+        t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 1000))
 
 
         # For the test to make sense, we need to set the field
@@ -621,6 +716,65 @@ end
         @test smm_local_minimizer(t)[2] ≈ - 1.0 atol = tol2dMean
 
       end
+
+      @testset "Testing local_to_global! with 2d, same magnitude and minBox = true" begin
+
+          # Rermark:
+          # It is important NOT to use srand()
+          # within the function simulate_empirical_moments!
+          # Otherwise, BlackBoxOptim does not find the solution
+          #----------------------------------------------------
+          tol2dMean = 0.2
+
+          @everywhere function functionTest2d(x)
+
+              d = MvNormal( [x[1]; x[2]], eye(2))
+              output = OrderedDict{String,Float64}()
+
+              # When using one of the deterministic methods of Optim,
+              # we can safely "control" for randomness
+              #-----------------------------------------------------
+              srand(1234)
+              draws = rand(d, 1000000)
+              output["mean1"] = mean(draws[1,:])
+              output["mean2"] = mean(draws[2,:])
+
+              return output
+          end
+
+
+          t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 1000, localOptimizer = :NelderMead, minBox = true))
+
+
+          # For the test to make sense, we need to set the field
+          # t.empiricalMoments::OrderedDict{String,Array{Float64,1}}
+          #------------------------------------------------------
+          dictEmpiricalMoments = OrderedDict{String,Array{Float64,1}}()
+          dictEmpiricalMoments["mean1"] = [1.0; 1.0]
+          dictEmpiricalMoments["mean2"] = [-1.0; -1.0]
+          set_empirical_moments!(t, dictEmpiricalMoments)
+
+
+          dictPriors = OrderedDict{String,Array{Float64,1}}()
+          dictPriors["mu1"] = [0., -5.0, 5.0]
+          dictPriors["mu2"] = [0., -5.0, 5.0]
+          set_priors!(t, dictPriors)
+
+          # A. Set the function: parameter -> simulated moments
+          set_simulate_empirical_moments!(t, functionTest2d)
+
+          # B. Construct the objective function, using the function: parameter -> simulated moments
+          # and moments' weights:
+          construct_objective_function!(t)
+
+          local_to_global!(t, nums = nworkers(), verbose = true)
+
+          @test smm_local_minimum(t) ≈ 0.0 atol = tol2dMean
+
+          @test smm_local_minimizer(t)[1] ≈ 1.0 atol = tol2dMean
+          @test smm_local_minimizer(t)[2] ≈ - 1.0 atol = tol2dMean
+
+        end
 
     # 2d problem
     #-----------

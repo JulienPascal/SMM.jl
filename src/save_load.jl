@@ -55,7 +55,7 @@ file should have the following columns "name", "value", "upper_bound", "lower_bo
    # store the number of rows in the dataframe:
    #------------------------------------------
    number_rows = size(dataFrame, 1)
-   info(string(number_rows, " prior(s) values found"))
+   info(string(number_rows, " prior value(s) found"))
 
    # Append the dictionary
    #----------------------

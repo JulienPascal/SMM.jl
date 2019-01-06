@@ -10,7 +10,7 @@ struct SMMOptions
 	saveSteps::Int64				#maximum number of steps
 	saveName::String				#name under which the optimization should be saved
 	showDistance::Bool			#show the distance, everytime the objective function is calculated?
-	minBox::Bool						#When looking for a local maximum, use Fminbox ? 
+	minBox::Bool						#When looking for a local maximum, use Fminbox ?
 end
 
 function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
@@ -215,58 +215,13 @@ function is_optim_optimizer(s::Symbol)
 
 end
 
-
 """
 	convert_to_optim_algo(s::Symbol)
 
 function to convert local optimizer (of type Symbol) to an Optim algo.
 """
 function convert_to_optim_algo(s::Symbol)
-
-	if s == :NelderMead
-
-		output = NelderMead()
-
-	elseif s == :SimulatedAnnealing
-
-		output = SimulatedAnnealing()
-
-	elseif s == :ParticleSwarm
-
-		output = ParticleSwarm()
-
-	elseif s == :BFGS
-
-		output = BFGS()
-
-	elseif s == :LBFGS
-
-		output = LBFGS()
-
-	elseif s == :ConjugateGradient
-
-		output = ConjugateGradient()
-
-	elseif s == :GradientDescent
-
-		output = GradientDescent()
-
-	elseif s == :MomentumGradientDescent
-
-		output = MomentumGradientDescent()
-
-	elseif s == :AcceleratedGradientDescent
-
-		output = AcceleratedGradientDescent()
-
-	else
-
-		Base.error("$(s) is not in the list of algorithm supported by Optim.")
-
-	end
-
-	return output
-
+	eval(Meta.parse("$(s)()"))
 end
 
 """
@@ -277,49 +232,8 @@ by Optim.
 """
 function convert_to_fminbox(s::Symbol)
 
-
-		if s == :NelderMead
-
-			output = Fminbox{NelderMead}()
-
-		elseif s == :SimulatedAnnealing
-
-			output = Fminbox{SimulatedAnnealing}()
-
-		elseif s == :ParticleSwarm
-
-			output = Fminbox{ParticleSwarm}()
-
-		elseif s == :BFGS
-
-			output = Fminbox{BFGS}()
-
-		elseif s == :LBFGS
-
-			output = Fminbox{LBFGS}()
-
-		elseif s == :ConjugateGradient
-
-			output = Fminbox{ConjugateGradient}()
-
-		elseif s == :GradientDescent
-
-			output = Fminbox{GradientDescent}()
-
-		elseif s == :MomentumGradientDescent
-
-			output = Fminbox{MomentumGradientDescent}()
-
-		elseif s == :AcceleratedGradientDescent
-
-			output = Fminbox{AcceleratedGradientDescent}()
-
-		else
-
-			Base.error("$(s) is not in the list of algorithm supported by Optim.")
-
-		end
-
-		return output
+	# Old API (before v0.15.0)
+	# To be changed when switching to Julia v0.7
+	eval(Meta.parse("Fminbox{$(s)}()"))
 
 end
