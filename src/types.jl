@@ -70,12 +70,15 @@ mutable struct SMMProblem
 	empiricalMoments::OrderedDict{String,Array{Float64,1}}
 	simulatedMoments::OrderedDict{String, Float64}
 	distanceEmpSimMoments::Float64
-	simulate_empirical_moments::Function
+	simulate_empirical_moments::Function					#returns an ordered dict
+	simulate_empirical_moments_array::Function		#returns an Array
 	objective_function::Function
 	options::SMMOptions
 	bbSetup::BlackBoxOptim.OptController					#set up when using BlackBoxOptim (global minimum)
 	bbResults::BlackBoxOptim.OptimizationResults	#results when using BlackBoxOptim (global minimum)
 	optimResults::Optim.OptimizationResults				#results when using Optim (local minimum)
+	Sigma0::Array{Float64,2}											#distance matrix (in the terminology of Duffie and Singleton (1993))
+	Avar::Array{Float64,2}											  #asymptotic variance of the SMM estimate
 end
 
 # Constructor for SMMProblem
@@ -85,12 +88,15 @@ function SMMProblem(  ;iter::Int64 = 0,
 											empiricalMoments::OrderedDict{String,Array{Float64,1}} = OrderedDict{String,Array{Float64,1}}(),
 											simulatedMoments::OrderedDict{String, Float64} = OrderedDict{String,Float64}(),
 											distanceEmpSimMoments::Float64 = 0.,
-											simulate_empirical_moments::Function = default_function,
+											simulate_empirical_moments::Function = default_function,       #returns an ordered dict
+											simulate_empirical_moments_array::Function = default_function, #returns an Array
 											objective_function::Function = default_function,
 											options::SMMOptions = SMMOptions(),
 											bbSetup::BlackBoxOptim.OptController = defaultbbOptimOptController,
 											bbResults::BlackBoxOptim.OptimizationResults = defaultbbOptimOptimizationResults,
-											optimResults::Optim.OptimizationResults = defaultOptimResults)
+											optimResults::Optim.OptimizationResults = defaultOptimResults,
+											Sigma0::Array{Float64,2} = Array{Float64}(0,0),
+											Avar::Array{Float64,2} = Array{Float64}(0,0))
 
 	SMMProblem(iter,
 						priors,
@@ -98,11 +104,14 @@ function SMMProblem(  ;iter::Int64 = 0,
 						simulatedMoments,
 						distanceEmpSimMoments,
 						simulate_empirical_moments,
+						simulate_empirical_moments_array,
 						objective_function,
 						options,
 						bbSetup,
 						bbResults,
-						optimResults)
+						optimResults,
+						Sigma0,
+						Avar)
 
 end
 
