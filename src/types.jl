@@ -11,6 +11,7 @@ struct SMMOptions
 	saveName::String				#name under which the optimization should be saved
 	showDistance::Bool			#show the distance, everytime the objective function is calculated?
 	minBox::Bool						#When looking for a local maximum, use Fminbox ?
+	populationSize::Int64		#When using BlackBoxOptim, set the population size
 end
 
 function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
@@ -19,7 +20,8 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 											saveSteps::Int64 = 100,
 											saveName::String = string(Dates.now()),
 											showDistance::Bool = false,
-											minBox::Bool = false)
+											minBox::Bool = false,
+											populationSize::Int64 = 50)
 
 	# Safety Checks
 	#--------------
@@ -37,12 +39,12 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 
 	# Warnings
 	#----------
-	# Saving too often leads to a poor performance if using BlackBoxOptim
+	# Saving too often (relative to population size) leads to a poor performance if using BlackBoxOptim
 	# see here: https://github.com/robertfeldt/BlackBoxOptim.jl/issues/99
 	#--------------------------------------------------------------------
-	if maxFuncEvals/saveSteps < 6 && is_bb_optimizer(globalOptimizer) == true
-		info("WARNING. When maxFuncEvals/saveSteps < 6 using BlackBoxOptim, the performance
-						of the global maximizer may deteriorate.")
+	# [TODO] Give a warning relative to the Population Size instead.
+	if saveSteps/populationSize < 6 && is_bb_optimizer(globalOptimizer) == true
+		info("WARNING. When saveSteps/populationSize < 6 using BlackBoxOptim, the performance of the global maximizer may deteriorate.")
 	end
 
 
@@ -54,7 +56,8 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 						saveSteps,
 						saveName,
 						showDistance,
-						minBox)
+						minBox,
+						populationSize)
 
 end
 

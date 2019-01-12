@@ -186,6 +186,7 @@ function set_bbSetup!(sMMProblem::SMMProblem)
                               SearchRange = mySearchRange,
                               MaxFuncEvals = sMMProblem.options.saveSteps,
                               TraceMode = :verbose,
+                              PopulationSize = sMMProblem.options.populationSize,
                               NumDimensions = length(keys(sMMProblem.priors)))
   else
     info("Starting optimization in parallel")
@@ -194,6 +195,7 @@ function set_bbSetup!(sMMProblem::SMMProblem)
                                 SearchRange = mySearchRange,
                                 MaxFuncEvals = sMMProblem.options.saveSteps,
                                 Workers = workers(),
+                                PopulationSize = sMMProblem.options.populationSize,
                                 TraceMode = :verbose,
                                 NumDimensions = length(keys(sMMProblem.priors)))
   end
