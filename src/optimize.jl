@@ -184,13 +184,14 @@ end
 
 
 """
-  local_to_global(sMMProblem::SMMProblem)
+  local_to_global!(sMMProblem::SMMProblem; x0 = Array{Float64}(0,0), nums::Int64 = nworkers(), verbose::Bool = true)
 
 Function to run several local minimization algorithms in parallel, with different
-starting values. Changes sMMProblem.optimResults. This function also returns
+starting values. The minimum is calculated as the minimum of the local minima.
+Changes sMMProblem.optimResults. This function also returns
 a list containing Optim results.
 """
-function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verbose::Bool = true)
+function local_to_global!(sMMProblem::SMMProblem; x0 = Array{Float64}(0,0), nums::Int64 = nworkers(), verbose::Bool = true)
 
   # Safety checks
   #--------------
@@ -206,7 +207,22 @@ function local_to_global!(sMMProblem::SMMProblem; nums::Int64 = nworkers(), verb
 
   # Look for valid starting values (for which convergence is reached)
   #-------------------------------------------------------------------
-  myGrid = search_starting_values(sMMProblem, nums, verbose = verbose)
+  if x0 == Array{Float64}(0,0)
+    myGrid = search_starting_values(sMMProblem, nums, verbose = verbose)
+  # Using starting values provided by the user
+  #-------------------------------------------
+  else
+
+    # Check that enough starting values were provided
+    if size(x0, 1) < nworkers()
+      info("$(size(x0, 1)) starting value(s) were provided.")
+      Base.error("The minimum number of starting value(s) to provide is $(nworkers()).")
+    end
+
+    myGrid = x0
+
+  end
+
 
   # If the local optimizer is using Optim
   #--------------------------------------
