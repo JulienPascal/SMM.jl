@@ -18,6 +18,7 @@ module SMM
   using Calculus
   using CompEcon
   using Distributions
+  using DataFrames
 
   @static if VERSION < v"0.7.0"
       using DataStructures
@@ -53,6 +54,10 @@ module SMM
   #---------------------------------------------
   include("optimize.jl")
 
+  # Functions to do inference
+  #---------------------------------------------
+  include("econometrics.jl")
+
   # Functions to do plots
   #---------------------------------------------
   include("plots.jl")
@@ -73,7 +78,8 @@ module SMM
   # Functions and types in generic.jl
   #----------------------------------
   export set_simulate_empirical_moments!, construct_objective_function!
-  export set_priors!, set_empirical_moments!, set_bbSetup!, generate_bbSearchRange
+  export set_priors!, set_empirical_moments!, set_Sigma0!
+  export set_bbSetup!, generate_bbSearchRange
   export create_lower_bound, create_upper_bound
   export set_global_optimizer!
   export create_grid, create_grid_stochastic, generate_std
@@ -89,6 +95,11 @@ module SMM
   export smm_refine_globalmin!, smm_local_minimizer
   export smm_local_minimum
   export smm_localmin, local_to_global!
+
+  # Functions in econometrics.jl
+  #-----------------------------
+  export calculate_D, calculate_Avar!, calculate_se, calculate_t, calculate_pvalue, calculate_CI
+  export summary_table
 
   # Functions in plots.jl
   #----------------------

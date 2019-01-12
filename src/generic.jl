@@ -7,7 +7,26 @@ the corresponding simulate moments values.
 """
 function set_simulate_empirical_moments!(sMMProblem::SMMProblem, f::Function)
 
+  # set the function that returns an ordered dictionary
   sMMProblem.simulate_empirical_moments = f
+
+  # set the function that returns an array (respecting the order of the ordered dict)
+  # this function is used to calculate the jacobian
+  function simulate_empirical_moments_array(x)
+
+    momentsODict = sMMProblem.simulate_empirical_moments(x)
+
+    momentsArray = Array{Float64}(length(momentsODict))
+
+    for (i, k) in enumerate(keys(momentsODict))
+        momentsArray[i] = momentsODict[k]
+    end
+
+    return momentsArray
+
+  end
+
+  sMMProblem.simulate_empirical_moments_array = simulate_empirical_moments_array
 
 end
 
@@ -92,7 +111,6 @@ end
   set_priors!(sMMProblem::SMMProblem, priors::OrderedDict{String,Array{Float64,1}})
 
 Function to change the field sMMProblem.priors
-
 """
 function set_priors!(sMMProblem::SMMProblem, priors::OrderedDict{String,Array{Float64,1}})
 
@@ -104,11 +122,22 @@ end
    set_empirical_moments!(sMMProblem::SMMProblem, empiricalMoments::OrderedDict{String,Array{Float64,1}})
 
 Function to change the field sMMProblem.empiricalMoments
-
 """
 function set_empirical_moments!(sMMProblem::SMMProblem, empiricalMoments::OrderedDict{String,Array{Float64,1}})
 
   sMMProblem.empiricalMoments = empiricalMoments
+
+end
+
+"""
+   set_Sigma0!(sMMProblem::SMMProblem, Sigma0::Array{Float64,2})
+
+Function to change the field sMMProblem.Sigma0, where Sigma0 is the distance matrix,
+in the terminology of Duffie and Singleton (1993)
+"""
+function  set_Sigma0!(sMMProblem::SMMProblem, Sigma0::Array{Float64,2})
+
+  sMMProblem.Sigma0 = Sigma0
 
 end
 
