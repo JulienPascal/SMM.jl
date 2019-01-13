@@ -620,7 +620,7 @@ end
         end
 
 
-        t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 500))
+        t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 1000))
 
 
         # For the test to make sense, we need to set the field
@@ -801,7 +801,7 @@ end
         end
 
 
-        t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 500))
+        t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 1000))
 
 
         # For the test to make sense, we need to set the field
