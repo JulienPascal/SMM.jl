@@ -29,10 +29,6 @@ function smm_slices(sMMProblem::SMMProblem, paramValues::Vector, nbPoints::Int64
 
         end
 
-        # # Options B.
-        # #-----------
-        # pmap(xIndex -> drawMe!(vYGrid, vXGrid, sMMProblem, paramValues, keyIndex, xIndex), 1:1:length(vXGrid))
-
         p = Plots.plot(vXGrid, vYGrid, title = "$(keyValue)")
         push!(listPlots, p)
 
@@ -43,16 +39,5 @@ function smm_slices(sMMProblem::SMMProblem, paramValues::Vector, nbPoints::Int64
     end
 
     return listPlots
-
-end
-
-function drawMe!(vYGrid, vXGrid, sMMProblem, paramValues, keyIndex, xIndex)
-
-  # Move along one dimension, keeping other values constant
-  #--------------------------------------------------------
-  localParamValues = copy(paramValues)
-  localParamValues[keyIndex] = vXGrid[xIndex]
-
-  vYGrid[xIndex] = sMMProblem.objective_function(localParamValues)
 
 end

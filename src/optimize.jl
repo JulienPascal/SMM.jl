@@ -374,7 +374,7 @@ Search for nums valid starting values. To be used after the following functions 
 (i) set_empirical_moments! (ii) set_priors! (iii) set_simulate_empirical_moments!
 (iv) construct_objective_function!
 """
-function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbose::Bool = true, maxNbTrials::Int64 = 1000)
+function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbose::Bool = true)
 
   # Safety Check
   #-------------
@@ -404,12 +404,12 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
   # Create many grids (stochastic draws) with many potential points
   #----------------------------------------------------------------
   if verbose == true
-    info("Creating $(maxNbTrials) potential grids")
+    info("Creating $(sMMProblem.options.maxTrialsStartingValues) potential grids")
     info("gridType = $(sMMProblem.options.gridType)")
   end
 
   listGrids = []
-  for i=1:maxNbTrials
+  for i=1:sMMProblem.options.maxTrialsStartingValues
     # sampling from uniform distribution or normal distribution
     if sMMProblem.options.gridType == :uniform || sMMProblem.options.gridType == :normal
       push!(listGrids, create_grid_stochastic(lower_bound, upper_bound, numPoints, gridType = sMMProblem.options.gridType))
@@ -431,8 +431,8 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
     results = []
     listGridsIndex += 1
 
-    if listGridsIndex > maxNbTrials
-      Base.error("Maximum number of attempts reached without success. maxNbTrials = $(maxNbTrials)")
+    if listGridsIndex > sMMProblem.options.maxTrialsStartingValues
+      Base.error("Maximum number of attempts reached without success. maxTrialsStartingValues = $(sMMProblem.options.maxTrialsStartingValues)")
     end
 
     # Use available workers to simulate moments
@@ -473,6 +473,16 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
 
   if verbose == true
     info("Found $(nbValidx0Found) valid starting values")
+  end
+
+  # If requested, save (valid) starting values generated
+  if sMMProblem.options.saveStartingValues == true
+    if verbose == true
+      info("Saving starting values to disk.")
+    end
+
+    tempfilename = "starting_values_"* sMMProblem.options.saveName * ".jld2"
+    JLD2.@save tempfilename Validx0
   end
 
   return Validx0
