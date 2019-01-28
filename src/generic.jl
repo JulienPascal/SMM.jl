@@ -46,7 +46,7 @@ function construct_objective_function!(sMMProblem::SMMProblem, objectiveType::Sy
 
       # Initialization
       #----------------
-      distanceEmpSimMoments = 999999.0
+      distanceEmpSimMoments = sMMProblem.options.penaltyValue
 
       #------------------------------------------------------------------------
       # A.
@@ -69,7 +69,7 @@ function construct_objective_function!(sMMProblem::SMMProblem, objectiveType::Sy
       # B.
       # If generating moment was successful, calculate distance between empirical
       # and simulated moments
-      # (If no convergence, returns large penalty value 999999.0)
+      # (If no convergence, returns penalty value : sMMProblem.options.penaltyValue)
       #------------------------------------------------------------------------
       if convergence == 1
 
@@ -284,10 +284,9 @@ end
 """
   create_grid_stochastic(a::Array{Float64,1}, b::Array{Float64,1}, nums::Int64)
 
-Function to create a grid. a is a vector of lower
-bounds, b a vector of upper bounds and numPoints is the number of points
-to be generated. The output is an Array{Float64,2}, where each row is a new point
-and each column is a dimension of this points.
+Function to create a grid. a is a vector of lower bounds, b a vector of upper bounds
+and numPoints is the number of points to be generated. The output is an Array{Float64,2},
+where each row is a new point and each column is a dimension of this points.
 """
 function create_grid_stochastic(a::Array{Float64,1}, b::Array{Float64,1}, numPoints::Int64; gridType::Symbol = :uniform, alpha::Float64 = 0.025)
 
@@ -417,4 +416,43 @@ function generate_std(a::Array{Float64,1}, b::Array{Float64,1}, numPoints::Int64
 
   return arrayStd
 
+end
+
+# This function is a Julia 0.6.4 version of the following function:
+# source: https://github.com/robertfeldt/BlackBoxOptim.jl/blob/master/src/utilities/latin_hypercube_sampling.jl
+# Function coded by Robert Feldt. All credit to him. I only changed two lines:
+# * cubedim = Vector{T}(n) instead of cubedim = Vector{T}(undef, n)
+# * I return return transpose(result) instead of result, to be consistent with
+# create_grid_stochastic and create_grid
+# As soon as I will update to Julia 0.7, I will use his function and remove this one.
+"""
+    latin_hypercube_sampling(mins, maxs, n)
+Randomly sample `n` vectors from the parallelogram defined
+by `mins` and `maxs` using the Latin hypercube algorithm.
+Returns `dims`×`n` matrix.
+"""
+function latin_hypercube_sampling(mins::AbstractVector{T},
+                                  maxs::AbstractVector{T},
+                                  n::Integer) where T<:Number
+    length(mins) == length(maxs) ||
+        throw(DimensionMismatch("mins and maxs should have the same length"))
+    all(xy -> xy[1] <= xy[2], zip(mins, maxs)) ||
+        throw(ArgumentError("mins[i] should not exceed maxs[i]"))
+    dims = length(mins)
+    result = zeros(T, dims, n)
+    # Julia 0.7
+    #----------
+    # cubedim = Vector{T}(undef, n)
+    # Julia 0.6.4
+    #------------
+    cubedim = Vector{T}(n)
+    @inbounds for i in 1:dims
+        imin = mins[i]
+        dimstep = (maxs[i] - imin) / n
+        for j in 1:n
+            cubedim[j] = imin + dimstep * (j - 1 + rand(T))
+        end
+        result[i, :] .= shuffle!(cubedim)
+    end
+    return transpose(result)
 end
