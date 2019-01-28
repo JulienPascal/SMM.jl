@@ -420,7 +420,7 @@ end
 
 # This function is a Julia 0.6.4 version of the following function:
 # source: https://github.com/robertfeldt/BlackBoxOptim.jl/blob/master/src/utilities/latin_hypercube_sampling.jl
-# Function coded by Robert Feldt. All credit to him. I only changed two lines:
+# Function coded by Robert Feldt. All credits to him. I only changed two lines:
 # * cubedim = Vector{T}(n) instead of cubedim = Vector{T}(undef, n)
 # * I return return transpose(result) instead of result, to be consistent with
 # create_grid_stochastic and create_grid
@@ -455,4 +455,15 @@ function latin_hypercube_sampling(mins::AbstractVector{T},
         result[i, :] .= shuffle!(cubedim)
     end
     return transpose(result)
+end
+
+"""
+  get_now()
+
+Returns date and time in a manner that does not clash with Windows, Linux and OSX
+"""
+function get_now()
+
+  "$(Dates.today())--$(Dates.hour(Dates.now()))h-$(Dates.minute(Dates.now()))m-$(Dates.second(Dates.now()))s"
+
 end

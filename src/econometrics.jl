@@ -42,10 +42,10 @@ function calculate_Avar!(sMMProblem::SMMProblem, theta0::Array{Float64,1}, tData
 
   inv_Sigma1 = inv(Sigma1)
 
-  # sandwich formula, where tau capture the extra noise introduced by simulation,
-  # compared to the usual GMM estimator
+  # sandwich formula, where tau captures the extra noise introduced by simulation,
+  # compared to the usual GMM estimator.
   # I use the function Symmetric, because otherwise a test issymmetric()
-  # on the asymptotic variance will return false because of numerical approximations
+  # on the asymptotic variance will return "false" because of numerical approximations
   sMMProblem.Avar = Symmetric((1+tau)*inv_Sigma1*Sigma2*inv_Sigma1)
 
 end

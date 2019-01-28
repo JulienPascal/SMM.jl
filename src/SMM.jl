@@ -103,9 +103,7 @@ module SMM
 
   # Functions in plots.jl
   #----------------------
-  export smm_slices, drawMe
-
-
+  export smm_slices
 
 
 end # module

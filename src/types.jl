@@ -14,18 +14,22 @@ struct SMMOptions
 	populationSize::Int64		#When using BlackBoxOptim, set the population size
 	penaltyValue::Float64 	#Objective function's value when the model fails
 	gridType::Symbol				#sampling procedure to use (latin hypercube by default)
+	saveStartingValues::Bool #whether or not saving the starting values when using local_to_global
+	maxTrialsStartingValues::Int64 #maximum number of attempts when searching for valid starting values
 end
 
 function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 											localOptimizer::Symbol=:LBFGS,
 											maxFuncEvals::Int64=1000,
 											saveSteps::Int64 = 100,
-											saveName::String = string(Dates.now()),
+											saveName::String = get_now(),
 											showDistance::Bool = false,
 											minBox::Bool = false,
 											populationSize::Int64 = 50,
-											penaltyValue::Float64 = 999.0,
-											gridType::Symbol = :latin)
+											penaltyValue::Float64 = 99999.0,
+											gridType::Symbol = :latin,
+											saveStartingValues::Bool = true,
+											maxTrialsStartingValues::Int64 = 1000)
 
 	# Safety Checks
 	#--------------
@@ -60,7 +64,9 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 						minBox,
 						populationSize,
 						penaltyValue,
-						gridType)
+						gridType,
+						saveStartingValues,
+						maxTrialsStartingValues)
 
 end
 
