@@ -12,6 +12,8 @@ struct SMMOptions
 	showDistance::Bool			#show the distance, everytime the objective function is calculated?
 	minBox::Bool						#When looking for a local maximum, use Fminbox ?
 	populationSize::Int64		#When using BlackBoxOptim, set the population size
+	penaltyValue::Float64 	#Objective function's value when the model fails
+	gridType::Symbol				#sampling procedure to use (latin hypercube by default)
 end
 
 function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
@@ -21,7 +23,9 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 											saveName::String = string(Dates.now()),
 											showDistance::Bool = false,
 											minBox::Bool = false,
-											populationSize::Int64 = 50)
+											populationSize::Int64 = 50,
+											penaltyValue::Float64 = 999.0,
+											gridType::Symbol = :latin)
 
 	# Safety Checks
 	#--------------
@@ -47,9 +51,6 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 		info("WARNING. When saveSteps/populationSize < 6 using BlackBoxOptim, the performance of the global maximizer may deteriorate.")
 	end
 
-
-
-
 	SMMOptions(globalOptimizer,
 						localOptimizer,
 						maxFuncEvals,
@@ -57,7 +58,9 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 						saveName,
 						showDistance,
 						minBox,
-						populationSize)
+						populationSize,
+						penaltyValue,
+						gridType)
 
 end
 

@@ -405,11 +405,21 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
   #----------------------------------------------------------------
   if verbose == true
     info("Creating $(maxNbTrials) potential grids")
+    info("gridType = $(sMMProblem.options.gridType)")
   end
 
   listGrids = []
   for i=1:maxNbTrials
-    push!(listGrids, create_grid_stochastic(lower_bound, upper_bound, numPoints, gridType = :uniform))
+    # sampling from uniform distribution or normal distribution
+    if sMMProblem.options.gridType == :uniform || sMMProblem.options.gridType == :normal
+      push!(listGrids, create_grid_stochastic(lower_bound, upper_bound, numPoints, gridType = sMMProblem.options.gridType))
+    # latin hypercube
+    elseif sMMProblem.options.gridType == :latin
+      push!(listGrids, latin_hypercube_sampling(lower_bound, upper_bound, numPoints))
+    else
+      Base.err("sMMProblem.options.gridType = $(sMMProblem.options.gridType) is not a valid sampling procedure.")
+    end
+
   end
 
   listGridsIndex = 0
@@ -441,7 +451,7 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
 
         distanceValue = results[workerIndex]
 
-        if isinf(distanceValue) == false && distanceValue != 999999.0
+        if isinf(distanceValue) == false && distanceValue != sMMProblem.options.penaltyValue
 
           nbValidx0Found +=1
 

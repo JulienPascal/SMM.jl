@@ -129,6 +129,22 @@ end
 
   end
 
+  @testset "Latin hypercube sampling" begin
+
+    points = latin_hypercube_sampling(a, b, numPoints)
+
+    @test size(points, 1) == numPoints
+    @test size(points, 2) == length(a)
+
+    for i=1:size(points, 1)
+      for j=1:size(points, 2)
+        @test points[i,j] >= a[j]
+        @test points[i,j] <= b[j]
+      end
+    end
+
+  end
+
 
 end
 
