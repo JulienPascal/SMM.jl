@@ -37,12 +37,25 @@ end
 
     @testset "testing SMMOptions" begin
 
+        saveName = get_now()
+
         t = SMMOptions()
 
-        # By default, the optimizer should be :adaptive_de_rand_1_bin_radiuslimited
-        #--------------------------------------------------------------------------
+        # Testing default values
+        #-----------------------------------------------------------------------
         @test t.globalOptimizer == :dxnes
 	      @test t.localOptimizer == :LBFGS
+        @test t.maxFuncEvals == 1000
+        @test t.saveSteps == 100
+        @test t.saveName == saveName
+        @test t.showDistance == false
+        @test t.minBox == false
+        @test t.populationSize == 50
+        @test t.penaltyValue == 999999.0
+        @test t.gridType == :latin
+        @test t.saveStartingValues == true
+        @test t.maxTrialsStartingValues == 1000
+        @test t.thresholdStartingValue == 99999.0
 
     end
 
