@@ -451,14 +451,15 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
 
         distanceValue = results[workerIndex]
 
-        if isinf(distanceValue) == false && distanceValue != sMMProblem.options.penaltyValue
+        # discard inf distances, values equal to penaltyValue and values above the threshold
+        if isinf(distanceValue) == false && distanceValue != sMMProblem.options.penaltyValue && distanceValue < sMMProblem.options.thresholdStartingValue
 
           nbValidx0Found +=1
 
           if nbValidx0Found <= numPoints
 
             Validx0[nbValidx0Found,:] = listGrids[listGridsIndex][workerIndex, :]
-            info("Valid starting value = $(Validx0[nbValidx0Found,:])")
+            info("Valid starting value = $(Validx0[nbValidx0Found,:]), distance = $(distanceValue)")
           end
 
         end

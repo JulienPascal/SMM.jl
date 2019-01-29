@@ -37,12 +37,25 @@ end
 
     @testset "testing SMMOptions" begin
 
+        saveName = get_now()
+
         t = SMMOptions()
 
-        # By default, the optimizer should be :adaptive_de_rand_1_bin_radiuslimited
-        #--------------------------------------------------------------------------
+        # Testing default values
+        #-----------------------------------------------------------------------
         @test t.globalOptimizer == :dxnes
 	      @test t.localOptimizer == :LBFGS
+        @test t.maxFuncEvals == 1000
+        @test t.saveSteps == 100
+        @test t.saveName == saveName
+        @test t.showDistance == false
+        @test t.minBox == false
+        @test t.populationSize == 50
+        @test t.penaltyValue == 999999.0
+        @test t.gridType == :latin
+        @test t.saveStartingValues == true
+        @test t.maxTrialsStartingValues == 1000
+        @test t.thresholdStartingValue == 99999.0
 
     end
 
@@ -854,6 +867,93 @@ end
 
 end
 
+
+@testset "Testing minimizing a function that may fail" begin
+
+          #---------------------------------------------------
+          tol2dMean = 0.2
+
+          @everywhere function functionTest2d(x)
+
+              # function that fails when the first input
+              # is smaller than minus 1:
+              #------------------------------------------
+              if x[1] < -1.0
+                error("I failed")
+              end
+
+              d = MvNormal( [x[1]; x[2]], eye(2))
+              output = OrderedDict{String,Float64}()
+              draws = rand(d, 1000000)
+              output["mean1"] = mean(draws[1,:])
+              output["mean2"] = mean(draws[2,:])
+
+              return output
+          end
+
+
+          t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 1000, globalOptimizer = :dxnes, localOptimizer = :NelderMead, minBox = false))
+
+          #---------------------------------------------------------------------
+          # Using multistart algo
+          #---------------------------------------------------------------------
+          # For the test to make sense, we need to set the field
+          # t.empiricalMoments::OrderedDict{String,Array{Float64,1}}
+          #------------------------------------------------------
+          dictEmpiricalMoments = OrderedDict{String,Array{Float64,1}}()
+          dictEmpiricalMoments["mean1"] = [1.0; 1.0]
+          dictEmpiricalMoments["mean2"] = [-1.0; -1.0]
+          set_empirical_moments!(t, dictEmpiricalMoments)
+
+
+          dictPriors = OrderedDict{String,Array{Float64,1}}()
+          dictPriors["mu1"] = [0., -5.0, 5.0]
+          dictPriors["mu2"] = [0., -5.0, 5.0]
+          set_priors!(t, dictPriors)
+
+          # A. Set the function: parameter -> simulated moments
+          set_simulate_empirical_moments!(t, functionTest2d)
+
+          # B. Construct the objective function, using the function: parameter -> simulated moments
+          # and moments' weights:
+          construct_objective_function!(t)
+
+          local_to_global!(t, nums = nworkers(), verbose = true)
+
+          @test smm_local_minimum(t) ≈ 0.0 atol = tol2dMean
+
+          @test smm_local_minimizer(t)[1] ≈ 1.0 atol = tol2dMean
+          @test smm_local_minimizer(t)[2] ≈ - 1.0 atol = tol2dMean
+
+          #---------------------------------------------------------------------
+          # Using BlackBoxOptim
+          #---------------------------------------------------------------------
+          t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 1000, globalOptimizer = :dxnes, localOptimizer = :NelderMead, minBox = false))
+
+          dictEmpiricalMoments = OrderedDict{String,Array{Float64,1}}()
+          dictEmpiricalMoments["mean1"] = [1.0; 1.0]
+          dictEmpiricalMoments["mean2"] = [-1.0; -1.0]
+          set_empirical_moments!(t, dictEmpiricalMoments)
+
+
+          dictPriors = OrderedDict{String,Array{Float64,1}}()
+          dictPriors["mu1"] = [0., -5.0, 5.0]
+          dictPriors["mu2"] = [0., -5.0, 5.0]
+          set_priors!(t, dictPriors)
+
+          # A. Set the function: parameter -> simulated moments
+          set_simulate_empirical_moments!(t, functionTest2d)
+
+          # B. Construct the objective function, using the function: parameter -> simulated moments
+          # and moments' weights:
+          construct_objective_function!(t)
+
+          smmoptimize!(t, verbose = true)
+
+          @test best_candidate(t.bbResults)[1] ≈  1.0 atol = tol2dMean
+          @test best_candidate(t.bbResults)[2] ≈  - 1.0 atol = tol2dMean
+
+end
 
 @testset "Testing Inference" begin
 

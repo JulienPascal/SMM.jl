@@ -16,6 +16,7 @@ struct SMMOptions
 	gridType::Symbol				#sampling procedure to use (latin hypercube by default)
 	saveStartingValues::Bool #whether or not saving the starting values when using local_to_global
 	maxTrialsStartingValues::Int64 #maximum number of attempts when searching for valid starting values
+	thresholdStartingValue::Float64 #value under which a point is considered as a valid starting value
 end
 
 function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
@@ -26,10 +27,11 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 											showDistance::Bool = false,
 											minBox::Bool = false,
 											populationSize::Int64 = 50,
-											penaltyValue::Float64 = 99999.0,
+											penaltyValue::Float64 = 999999.0,
 											gridType::Symbol = :latin,
 											saveStartingValues::Bool = true,
-											maxTrialsStartingValues::Int64 = 1000)
+											maxTrialsStartingValues::Int64 = 1000,
+											thresholdStartingValue::Float64 = 99999.0)
 
 	# Safety Checks
 	#--------------
@@ -43,6 +45,10 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 
 	if mod(maxFuncEvals, saveSteps) != 0
 		error("Error in the constructor for SMMOptions. \n maxFuncEvals should be a multiple of saveSteps")
+	end
+
+	if thresholdStartingValue > penaltyValue
+		error("Please set thresholdStartingValue < penaltyValue.")
 	end
 
 	# Warnings
@@ -66,7 +72,8 @@ function SMMOptions( ;globalOptimizer::Symbol=:dxnes,
 						penaltyValue,
 						gridType,
 						saveStartingValues,
-						maxTrialsStartingValues)
+						maxTrialsStartingValues,
+						thresholdStartingValue)
 
 end
 
