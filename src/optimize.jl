@@ -399,6 +399,7 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
   #Each row is a new point and each column is a dimension of this points.
   #---------------------------------------------------------------------
   Validx0 = zeros(numPoints, length(lower_bound))
+  distanceValue = zeros(numPoints) #to store the distance associated to each point
   nbValidx0Found = 0
 
   # Create many grids (stochastic draws) with many potential points
@@ -447,19 +448,22 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
     #----------------------
     for (workerIndex, w) in enumerate(workers())
 
+      # Set penalty value by default
+      distanceValue[workerIndex] = sMMProblem.options.penaltyValue
+
       try
 
-        distanceValue = results[workerIndex]
+        distanceValue[workerIndex] = results[workerIndex]
 
         # discard inf distances, values equal to penaltyValue and values above the threshold
-        if isinf(distanceValue) == false && distanceValue != sMMProblem.options.penaltyValue && distanceValue < sMMProblem.options.thresholdStartingValue
+        if isinf(distanceValue[workerIndex]) == false && distanceValue[workerIndex] != sMMProblem.options.penaltyValue && distanceValue[workerIndex] < sMMProblem.options.thresholdStartingValue
 
           nbValidx0Found +=1
 
           if nbValidx0Found <= numPoints
 
             Validx0[nbValidx0Found,:] = listGrids[listGridsIndex][workerIndex, :]
-            info("Valid starting value = $(Validx0[nbValidx0Found,:]), distance = $(distanceValue)")
+            info("Valid starting value = $(Validx0[nbValidx0Found,:]), distance = $(distanceValue[workerIndex])")
           end
 
         end
@@ -471,6 +475,10 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
     end
 
   end
+
+  # sorting starting values according to distance value (in ascending order)
+  p = sortperm(distanceValue) #get the ascending order
+  Validx0 = Validx0[p,:]  #re-order rows
 
   if verbose == true
     info("Found $(nbValidx0Found) valid starting values")
@@ -484,6 +492,10 @@ function search_starting_values(sMMProblem::SMMProblem, numPoints::Int64; verbos
 
     tempfilename = "starting_values_"* sMMProblem.options.saveName * ".jld2"
     JLD2.@save tempfilename Validx0
+
+    tempfilename = "starting_distances_"* sMMProblem.options.saveName * ".jld2"
+    JLD2.@save tempfilename distanceValue
+
   end
 
   return Validx0
