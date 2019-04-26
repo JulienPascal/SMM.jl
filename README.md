@@ -19,10 +19,9 @@ the current observations for any given parameter value. However, in many
 instances, this likelihood function is untractable.
 
 An alternative approach to estimate the unknown parameters is to minimize a (weighted) distance between
-the empirical [moments](https://en.wikipedia.org/wiki/Moment_(mathematics) (means, variances, etc.) and their theoretical counterparts. If the model is correctly specified, it is natural
-to expect that the unknown parameters, at their "true" values, should be such that
-the empirical and theoretical moments should be close to each others. When the function mapping
-the set of parameters values to the theoretical moments (the "expected response function") is known, this method is called
+the empirical [moments](https://en.wikipedia.org/wiki/Moment_(mathematics) (means, variances, etc.) and their theoretical counterparts (which depend on paramaters). If the model is correctly specified, it is natural
+to expect that the "true" parameter values are the ones generating theoretical moments close to the empirical ones. When the function mapping
+the set of parameter values to the theoretical moments (the "expected response function") is known, this method is called
 the [Generalized Method of Moments](https://en.wikipedia.org/wiki/Generalized_method_of_moments).
 Yet, in many cases the expected response function is unknown. This issue may be circumvented by
 simulating the expected response function, which is often an easy task. In this case, the method is called the [Method of Simulated Moments](https://en.wikipedia.org/wiki/Method_of_simulated_moments) or equivalently the **Simulated Method of Moments (SMM)**. This package is designed to facilitate the estimation of economic models via the Simulated Method of Moments.
