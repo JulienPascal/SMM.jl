@@ -41,3 +41,7 @@ See the following notebooks:
 ## Related Packages
 
 * [MomentOpt](https://github.com/floswald/MomentOpt.jl) : a package to do SMM using MCMC algorithms in parallel
+
+## Acknowledgement
+
+This work is supported by a public grant overseen by the French National Research Agency (ANR) as part of the “Investissements d’Avenir” program LIEPP (reference: ANR-11-LABX0091, ANR-11-IDEX-0005-02).

@@ -871,7 +871,7 @@ end
 @testset "Testing minimizing a function that may fail" begin
 
           #---------------------------------------------------
-          tol2dMean = 0.2
+          tol2dMean = 0.5
 
           @everywhere function functionTest2d(x)
 
@@ -892,7 +892,7 @@ end
           end
 
 
-          t = SMMProblem(options = SMMOptions(maxFuncEvals=1000,saveSteps = 1000, globalOptimizer = :dxnes, localOptimizer = :NelderMead, minBox = false))
+          t = SMMProblem(options = SMMOptions(maxFuncEvals=2000,saveSteps = 2000, globalOptimizer = :dxnes, localOptimizer = :NelderMead, minBox = false))
 
           #---------------------------------------------------------------------
           # Using multistart algo
