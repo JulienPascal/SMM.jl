@@ -58,6 +58,10 @@ module SMM
   #---------------------------------------------
   include("econometrics.jl")
 
+  # HAC covarianc estimation
+  #---------------------------------------------
+  include("hac.jl")
+
   # Functions to do plots
   #---------------------------------------------
   include("plots.jl")
@@ -101,6 +105,10 @@ module SMM
   #-----------------------------
   export calculate_D, calculate_Avar!, calculate_se, calculate_t, calculate_pvalue, calculate_CI
   export summary_table
+
+  # Functions in hac.jl
+  #--------------------
+  export NW_kernel, hac_cov, Omega
 
   # Functions in plots.jl
   #----------------------

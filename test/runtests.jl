@@ -1155,3 +1155,37 @@ end
 
 
 end
+
+@testset "HAC covariance estimation" begin
+
+    @test NW_kernel(2, 1) == 0.
+    @test NW_kernel(1, 1) == 0.5
+
+    # Let's generate a random series:
+    #--------------------------------
+    X = rand(100,3)
+
+    # with m=0 and corrected=true, we should get the covariance matrix
+    @test hac_cov(X, m=0, corrected=true) == cov(X)
+
+    # should be positive definite:
+    @test isposdef(hac_cov(X, m=1, corrected=true)) == true
+
+    # Let's introduce some serial correlation:
+    #------------------------------------------
+    T = 10000
+    n = 3
+    X = zeros(T,3)
+    rho=sqrt(0.5)
+    numerator_values=[1;2;3]
+    d=MvNormal(zeros(n), eye(n).*numerator_values)
+    for t=2:T
+            X[t,:]=rho.*X[t-1,:] .+ rand(d)
+    end
+
+    #Given the model specification, the off-diagonal values should be zero
+    #and the diagonal values should be numerator_values^2/(1 - rho^2)
+    #Values should be [2,4,6]
+    hac_cov(X, m=0)
+
+end
