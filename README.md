@@ -4,7 +4,18 @@
 
 [![Coverage Status](https://coveralls.io/repos/JulienPascal/SMM.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JulienPascal/SMM.jl?branch=master)
 
+[![codecov.io](https://codecov.io/gh/JulienPascal/MSM.jl/branch/julia_1.5/graphs/badge.svg]
+(https://codecov.io/github/<Your Organization/Acc.>/<YourRepo>?branch=master)
+
 [![codecov.io](http://codecov.io/github/JulienPascal/SMM.jl/coverage.svg?branch=master)](http://codecov.io/github/JulienPascal/SMM.jl?branch=master)
+
+## WARNING
+
+This package is now deprecated and not maintained. Its (renamed) successor can be
+found [here](https://github.com/JulienPascal).
+
+---
+
 
 `SMM.jl` is a package designed to facilitate the estimation of economic models
 via the [Simulated Method of Moments](https://en.wikipedia.org/wiki/Method_of_simulated_moments). It relies on [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) and [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) to perform the minimization.
@@ -29,7 +40,7 @@ simulating the expected response function, which is often an easy task. In this 
 ## Philosophy
 
 `SMM.jl` is being developed with the following constraints in mind:
-* the minimizing algorithm should be able to run in **parallel**, as the computational cost of simulating moments, for a given parameter value, is potentially high.
+* the minimizing algorithm should be able to run in **parallel**, as the computational cost of simulating moments is potentially high.
 * Parallelization within the function generating simulated moments is difficult
 to achieve. This is generally the case when working with the simulated method of moments,
  as the time series generated are often serially correlated. This is why parallelization is done at the level of the minimization
